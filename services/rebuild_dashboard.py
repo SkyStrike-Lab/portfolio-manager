@@ -801,17 +801,28 @@ def fetch_cash_report_details(earliest_transaction_date):
         base_cap_rows = cursor.fetchall()
         base_cap_map = {row['broker'].upper(): row['base_capital'] or 0.0 for row in base_cap_rows}
         
-        # Query latest cash report row per broker
+        # Query latest cash report row per broker (excluding legacy CONSOLIDATED if individual brokers exist)
         cursor.execute("""
             SELECT r.broker, r.date, r.liquidation_value, r.total_stock_value, r.cash_on_hand, r.updated_at
             FROM daily_cash_report r
             INNER JOIN (
                 SELECT broker, MAX(date) as max_date
                 FROM daily_cash_report
+                WHERE UPPER(broker) != 'CONSOLIDATED'
                 GROUP BY broker
             ) m ON r.broker = m.broker AND r.date = m.max_date
         """)
         rows = cursor.fetchall()
+        if not rows:
+            # Fallback to CONSOLIDATED if only legacy rows exist
+            cursor.execute("""
+                SELECT r.broker, r.date, r.liquidation_value, r.total_stock_value, r.cash_on_hand, r.updated_at
+                FROM daily_cash_report r
+                WHERE UPPER(r.broker) = 'CONSOLIDATED'
+                ORDER BY r.date DESC LIMIT 1
+            """)
+            rows = cursor.fetchall()
+
         if not rows:
             return None
             
