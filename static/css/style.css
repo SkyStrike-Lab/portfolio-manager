@@ -51,11 +51,27 @@ body {
     width: 100%;
 }
 
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+}
 
+@media (max-width: 480px) {
+    .container {
+        padding: 0 0.5rem;
+    }
+}
 
 /* Layout Content Area */
 main {
     padding: 2rem 0;
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 1rem 0;
+    }
 }
 
 /* KPI Summary Cards Grid */
@@ -2076,11 +2092,11 @@ body.gateway-active .local-nav {
         width: 100%;
     }
     .symbol-stats-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .symbol-stats-grid {
         grid-template-columns: 1fr;
     }
@@ -3850,16 +3866,16 @@ body.mask-values .sensitive-value::after {
             position: static;
             max-height: none;
         }
-        .symbol-stats-grid {
+        .spa-symbol-card .symbol-stats-grid {
             grid-template-columns: repeat(2, 1fr);
         }
     }
 
-    @media (max-width: 680px) {
+    @media (max-width: 768px) {
         .spa-symbol-card {
             padding: 16px;
         }
-        .symbol-stats-grid {
+        .spa-symbol-card .symbol-stats-grid {
             grid-template-columns: 1fr;
             padding: 14px;
             gap: 15px;
