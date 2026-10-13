@@ -687,6 +687,48 @@ const { createApp } = Vue;
                 
                 return { toc: tocList, body };
             },
+            closedSummary() {
+                if (!this.portfolioData || !this.portfolioData.positions) {
+                    return {
+                        total_profit_sgd: 0,
+                        win_count: 0,
+                        loss_count: 0,
+                        win_rate_pct: 0,
+                        total_positions: 0,
+                        total_income_sgd: 0,
+                        total_capital_sgd: 0
+                    };
+                }
+
+                const closedPositions = this.portfolioData.positions.filter(p => p.is_closed);
+                let totalProfit = 0;
+                let wins = 0;
+                let losses = 0;
+                let totalIncome = 0;
+                let totalCapital = 0;
+
+                closedPositions.forEach(p => {
+                    const profit = p.sgd_metrics?.profit_sgd || 0;
+                    totalProfit += profit;
+                    if (profit > 0) wins++;
+                    else if (profit < 0) losses++;
+                    totalIncome += (p.sgd_metrics?.income_sgd || 0);
+                    totalCapital += (p.sgd_metrics?.invested_sgd || 0);
+                });
+
+                const totalClosed = closedPositions.length;
+                const winRate = totalClosed > 0 ? (wins / totalClosed) * 100 : 0;
+
+                return {
+                    total_profit_sgd: totalProfit,
+                    win_count: wins,
+                    loss_count: losses,
+                    win_rate_pct: winRate,
+                    total_positions: totalClosed,
+                    total_income_sgd: totalIncome,
+                    total_capital_sgd: totalCapital
+                };
+            },
             txHistoryReport() {
                 if (!this.portfolioData || !this.portfolioData.positions) return { tree: [], global_summary: { expense: 0, income: 0, net: 0 } };
                 
