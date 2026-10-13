@@ -1,66 +1,39 @@
 {% raw %}
         <!-- 4. CLOSED HOLDINGS TAB VIEW -->
         <div v-show="currentView === 'closed'" class="spa-closed-wrapper">
-            <!-- Top Closed Holdings KPI Summary Banner -->
-            <div class="kpi-grid spa-closed-kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <span>Total Realized P&L</span>
-                        <span>💰</span>
-                    </div>
-                    <div class="kpi-value" :class="getValClass(closedSummary.total_profit_sgd)">
-                        {{ formatCommas(closedSummary.total_profit_sgd, true) }} <small class="text-xs">SGD</small>
-                    </div>
-                    <div class="kpi-subtext text-secondary">
-                        Overall Realized Gain/Loss
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <span>Win Rate</span>
-                        <span>🎯</span>
-                    </div>
-                    <div class="kpi-value text-gain">
-                        {{ closedSummary.win_rate_pct.toFixed(1) }}%
-                    </div>
-                    <div class="kpi-subtext text-secondary">
-                        <span class="text-gain">{{ closedSummary.win_count }} Wins</span> / <span class="text-loss">{{ closedSummary.loss_count }} Losses</span>
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <span>Positions Closed</span>
-                        <span>📦</span>
-                    </div>
-                    <div class="kpi-value">
-                        {{ closedSummary.total_positions }}
-                    </div>
-                    <div class="kpi-subtext text-secondary">
-                        Completed Trades
-                    </div>
-                </div>
-
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <span>Realized Income / Divs</span>
-                        <span>📈</span>
-                    </div>
-                    <div class="kpi-value text-gain">
-                        +{{ formatCommas(closedSummary.total_income_sgd) }} <small class="text-xs">SGD</small>
-                    </div>
-                    <div class="kpi-subtext text-secondary">
-                        Dividends from Closed Holdings
-                    </div>
-                </div>
-            </div>
-
             <div class="report-container spa-report-container">
                 <!-- Sidebar Flat TOC -->
                 <div class="sidebar spa-closed-sidebar">
-                    <h1 id="table-of-contents" class="spa-tx-heading">Table of Contents</h1>
+                    <h1 id="table-of-contents" class="spa-tx-heading">Closed Positions</h1>
                     
+                    <!-- Global Closed Lifetime Summary -->
+                    <div class="symbol-stats-grid spa-tx-summary-grid spa-closed-summary-box">
+                        <h2 class="spa-tx-summary-heading">Lifetime Summary</h2>
+                        <div class="stat-group spa-flex-col-gap12">
+                            <div class="stat-item">
+                                <span class="stat-label spa-stat-label-sm">Total Realized P&L</span>
+                                <span class="stat-value spa-value-lg-bold" :class="getValClass(closedSummary.total_profit_sgd)">
+                                    {{ formatCommas(closedSummary.total_profit_sgd, true) }} SGD
+                                </span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label spa-stat-label-sm">Win Rate</span>
+                                <span class="stat-value text-gain">
+                                    {{ closedSummary.win_rate_pct.toFixed(1) }}%
+                                </span>
+                                <span class="stat-subvalue spa-stat-label-sm">
+                                    {{ closedSummary.win_count }}W / {{ closedSummary.loss_count }}L ({{ closedSummary.total_positions }} closed)
+                                </span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label spa-stat-label-sm">Total Dividends</span>
+                                <span class="stat-value pos-val text-gain">
+                                    +{{ formatCommas(closedSummary.total_income_sgd) }} SGD
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="search-container spa-mb-20">
                         <div class="search-wrapper">
                             <input type="text" v-model="closedSearch" placeholder="Search closed symbols..." class="spa-tx-search-input">
@@ -97,40 +70,25 @@
 
                 <!-- Main Contents -->
                 <div class="main-content spa-closed-main">
-                    <!-- Quick Jump Period Bar -->
-                    <div v-if="closedReport.body && closedReport.body.length > 0" class="spa-closed-quickjump-bar">
-                        <span class="spa-quickjump-label">🚀 Quick Jump:</span>
-                        <div class="spa-quickjump-pills">
-                            <a v-for="group in closedReport.body" 
-                               :key="'qj-' + group.title" 
-                               :href="'#group-' + slugify(group.title)" 
-                               class="spa-quickjump-pill">
-                                <span>{{ group.month_name }} {{ group.year }}</span>
-                                <small :class="getValClass(group.total_gl)">({{ formatCommas(group.total_gl, true) }})</small>
-                            </a>
-                        </div>
-                    </div>
-
                     <div v-for="group in closedReport.body" :key="group.title" :id="'group-' + slugify(group.title)" class="report-group spa-mb-45">
                         <h2 class="spa-group-heading">
                             <span>{{ group.year }} – {{ group.month_name }}</span>
                             <small class="spa-val-lg-bold" :class="getValClass(group.total_gl)">{{ formatCommas(group.total_gl, true) }} SGD</small>
                         </h2>
                         
-                        <!-- Responsive multi-column grid of symbol cards -->
-                        <div class="spa-closed-cards-grid">
-                            <div v-for="p in group.positions" :key="p.symbol" :id="slugify(p.symbol)" class="spa-symbol-card spa-closed-card">
-                                <h2 class="symbol-card-header spa-modal-header">
-                                    <div class="header-content">
-                                        <div class="title spa-flex-center-gap-8">
-                                            <span v-text="p.symbol" class="spa-symbol-ticker"></span>
-                                            <span class="augmented-badge spa-badge-closed">Closed</span>
-                                        </div>
-                                        <div class="subtitle spa-subtitle-small">
-                                            ROI: <span class="spa-weight-600" :class="getValClass(p.metrics.roi_pct)">{{ formatCommas(p.metrics.roi_pct, true) }}%</span>
-                                        </div>
+                        <!-- 1 row per stock layout -->
+                        <div v-for="p in group.positions" :key="p.symbol" :id="slugify(p.symbol)" class="spa-symbol-card spa-closed-card">
+                            <h2 class="symbol-card-header spa-modal-header">
+                                <div class="header-content">
+                                    <div class="title spa-flex-center-gap-8">
+                                        <span v-text="p.symbol" class="spa-symbol-ticker"></span>
+                                        <span class="augmented-badge spa-badge-closed">Closed</span>
                                     </div>
-                                </h2>
+                                    <div class="subtitle spa-subtitle-small">
+                                        ROI: <span class="spa-weight-600" :class="getValClass(p.metrics.roi_pct)">{{ formatCommas(p.metrics.roi_pct, true) }}%</span>
+                                    </div>
+                                </div>
+                            </h2>
 
                             <!-- 4-Column Stat Matrix -->
                             <div class="symbol-card-upper spa-mt-20-mb-25">
@@ -304,7 +262,6 @@
                                     </div>
                                 </template>
                             </div>
-                        </div>
                         </div>
                     </div>
                 </div>

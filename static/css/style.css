@@ -3798,7 +3798,6 @@ body.mask-values .sensitive-value::after {
     .spa-mb-40 { margin-bottom: 40px; }
     .spa-chart-section-title { margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); }
     .spa-closed-wrapper { width: 100%; }
-    .spa-closed-kpi-grid { margin-bottom: 25px; }
     .spa-closed-sidebar {
         flex: 0 0 280px;
         max-width: 320px;
@@ -3813,6 +3812,13 @@ body.mask-values .sensitive-value::after {
         max-height: calc(100vh - 105px);
         overflow-y: auto;
     }
+    .spa-closed-summary-box {
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 14px;
+    }
     .spa-toc-year { font-weight: 700; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; margin-bottom: 8px; display: flex; justify-content: space-between; }
     .spa-toc-month-group { margin-bottom: 10px; margin-left: 10px; }
     .spa-toc-month { font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; display: flex; justify-content: space-between; cursor: pointer; }
@@ -3821,81 +3827,15 @@ body.mask-values .sensitive-value::after {
     .spa-toc-link { text-decoration: none; display: flex; justify-content: space-between; color: var(--text-primary); }
     .spa-closed-main { flex: 1 1 650px; min-width: 320px; }
     .spa-mb-45 { margin-bottom: 45px; }
-    .spa-group-heading { background: rgba(22, 28, 45, 0.65); padding: 12px 20px; border-radius: 8px; border-left: 5px solid #8b5cf6; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-family: 'Outfit', sans-serif; }
+    .spa-group-heading { background: rgba(22, 28, 45, 0.65); padding: 12px 20px; border-radius: 8px; border-left: 5px solid #8b5cf6; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-family: 'Outfit', sans-serif; }
     .spa-val-lg-bold { font-size: 1.1rem; font-weight: 700; }
     
-    /* Quick Jump Pills */
-    .spa-closed-quickjump-bar {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        background: rgba(22, 28, 45, 0.4);
-        border: 1px solid var(--card-border);
-        border-radius: 10px;
-        padding: 10px 16px;
-        margin-bottom: 25px;
-    }
-    .spa-quickjump-label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-        white-space: nowrap;
-    }
-    .spa-quickjump-pills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    .spa-quickjump-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 5px 12px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        color: var(--text-primary);
-        font-size: 0.8rem;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-    .spa-quickjump-pill:hover {
-        background: rgba(139, 92, 246, 0.15);
-        border-color: rgba(139, 92, 246, 0.4);
-        color: #c084fc;
-        transform: translateY(-1px);
-    }
-    
-    /* Responsive Multi-column Grid for Closed Position Cards */
-    .spa-closed-cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
-        gap: 24px;
-        align-items: stretch;
-    }
     .spa-symbol-card {
         margin-bottom: 45px;
         background: rgba(22, 28, 45, 0.15);
         border: 1px solid var(--card-border);
         border-radius: 12px;
         padding: 25px;
-    }
-    .spa-symbol-card.spa-closed-card {
-        margin-bottom: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        background: rgba(22, 28, 45, 0.35);
-        transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    .spa-symbol-card.spa-closed-card:hover {
-        border-color: var(--card-hover-border, rgba(139, 92, 246, 0.3));
-    }
-    .spa-symbol-card.spa-closed-card .symbol-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        padding: 15px;
     }
     .spa-symbol-ticker { font-size: 1.4rem; font-family: 'Outfit', sans-serif; font-weight: bold; color: var(--text-primary); }
     .spa-badge-closed { background: rgba(142, 68, 173, 0.12); color: #9b59b6; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
@@ -3906,9 +3846,6 @@ body.mask-values .sensitive-value::after {
             max-width: 100%;
             position: static;
             max-height: 350px;
-        }
-        .spa-closed-cards-grid {
-            grid-template-columns: 1fr;
         }
     }
 
