@@ -51,11 +51,27 @@ body {
     width: 100%;
 }
 
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+}
 
+@media (max-width: 480px) {
+    .container {
+        padding: 0 0.5rem;
+    }
+}
 
 /* Layout Content Area */
 main {
     padding: 2rem 0;
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 1rem 0;
+    }
 }
 
 /* KPI Summary Cards Grid */
@@ -2076,11 +2092,11 @@ body.gateway-active .local-nav {
         width: 100%;
     }
     .symbol-stats-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .symbol-stats-grid {
         grid-template-columns: 1fr;
     }
@@ -3797,20 +3813,74 @@ body.mask-values .sensitive-value::after {
     /* --- Additional SPA Layout Classes (pass 3) --- */
     .spa-mb-40 { margin-bottom: 40px; }
     .spa-chart-section-title { margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); }
-    .spa-closed-sidebar { flex: 1 1 300px; max-width: 400px; min-width: 280px; background: rgba(22, 28, 45, 0.45); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; }
-    .spa-toc-year { font-weight: 700; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .spa-closed-wrapper { width: 100%; }
+    .spa-closed-sidebar {
+        flex: 0 0 380px;
+        max-width: 420px;
+        min-width: 360px;
+        background: rgba(22, 28, 45, 0.45);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 20px;
+        height: fit-content;
+        position: sticky;
+        top: 85px;
+        max-height: calc(100vh - 105px);
+        overflow-y: auto;
+    }
+    .spa-closed-summary-box {
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 14px;
+    }
+    .spa-toc-year { font-weight: 700; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; }
     .spa-toc-month-group { margin-bottom: 10px; margin-left: 10px; }
-    .spa-toc-month { font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; display: flex; justify-content: space-between; cursor: pointer; }
+    .spa-toc-month { font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: baseline; cursor: pointer; }
     .spa-toc-symbols { list-style: none; padding-left: 10px; margin: 0; }
     .spa-toc-symbol-item { margin-bottom: 6px; font-size: 0.8rem; }
-    .spa-toc-link { text-decoration: none; display: flex; justify-content: space-between; color: var(--text-primary); }
-    .spa-closed-main { flex: 2 1 600px; min-width: 320px; }
+    .spa-toc-link { text-decoration: none; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; color: var(--text-primary); }
+    .spa-toc-link span:last-child { white-space: nowrap; }
+    .spa-closed-main {
+        flex: 1 1 650px;
+        min-width: 0;
+        width: 100%;
+    }
     .spa-mb-45 { margin-bottom: 45px; }
     .spa-group-heading { background: rgba(22, 28, 45, 0.65); padding: 12px 20px; border-radius: 8px; border-left: 5px solid #8b5cf6; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-family: 'Outfit', sans-serif; }
     .spa-val-lg-bold { font-size: 1.1rem; font-weight: 700; }
-    .spa-symbol-card { margin-bottom: 45px; background: rgba(22, 28, 45, 0.15); border: 1px solid var(--card-border); border-radius: 12px; padding: 25px; }
+    
+    .spa-symbol-card {
+        margin-bottom: 45px;
+        background: rgba(22, 28, 45, 0.15);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 25px;
+        width: 100%;
+    }
     .spa-symbol-ticker { font-size: 1.4rem; font-family: 'Outfit', sans-serif; font-weight: bold; color: var(--text-primary); }
     .spa-badge-closed { background: rgba(142, 68, 173, 0.12); color: #9b59b6; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; }
+
+    @media (max-width: 1100px) {
+        .spa-closed-sidebar {
+            flex: 1 1 100%;
+            max-width: 100%;
+            min-width: 100%;
+            width: 100%;
+            position: static;
+            max-height: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .spa-symbol-card {
+            padding: 16px;
+        }
+        .spa-closed-main {
+            width: 100%;
+        }
+    }
 
     .ytd-summary-container {
         margin-bottom: 30px;

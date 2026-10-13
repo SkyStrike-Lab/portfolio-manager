@@ -1,11 +1,39 @@
 {% raw %}
         <!-- 4. CLOSED HOLDINGS TAB VIEW -->
-        <div v-show="currentView === 'closed'">
+        <div v-show="currentView === 'closed'" class="spa-closed-wrapper">
             <div class="report-container spa-report-container">
                 <!-- Sidebar Flat TOC -->
                 <div class="sidebar spa-closed-sidebar">
-                    <h1 id="table-of-contents" class="spa-tx-heading">Table of Contents</h1>
+                    <h1 id="table-of-contents" class="spa-tx-heading">Closed Positions</h1>
                     
+                    <!-- Global Closed Lifetime Summary -->
+                    <div class="symbol-stats-grid spa-tx-summary-grid spa-closed-summary-box">
+                        <h2 class="spa-tx-summary-heading">Lifetime Summary</h2>
+                        <div class="stat-group spa-flex-col-gap12">
+                            <div class="stat-item">
+                                <span class="stat-label spa-stat-label-sm">Total Realized P&L</span>
+                                <span class="stat-value spa-value-lg-bold" :class="getValClass(closedSummary.total_profit_sgd)">
+                                    {{ formatCommas(closedSummary.total_profit_sgd, true) }} SGD
+                                </span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label spa-stat-label-sm">Win Rate</span>
+                                <span class="stat-value text-gain">
+                                    {{ closedSummary.win_rate_pct.toFixed(1) }}%
+                                </span>
+                                <span class="stat-subvalue spa-stat-label-sm">
+                                    {{ closedSummary.win_count }}W / {{ closedSummary.loss_count }}L ({{ closedSummary.total_positions }} closed)
+                                </span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label spa-stat-label-sm">Total Dividends</span>
+                                <span class="stat-value pos-val text-gain">
+                                    +{{ formatCommas(closedSummary.total_income_sgd) }} SGD
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="search-container spa-mb-20">
                         <div class="search-wrapper">
                             <input type="text" v-model="closedSearch" placeholder="Search closed symbols..." class="spa-tx-search-input">
@@ -19,7 +47,7 @@
                                 <small>(<span :class="getValClass(yr_data.total_gl)">{{ formatCommas(yr_data.total_gl, true) }} SGD</span>)</small>
                             </div>
                             <div v-for="(data, month) in yr_data.months" :key="month" class="spa-toc-month-group">
- <div class="toc-month spa-toc-month" onclick="this.classList.toggle('active')" >
+                                <div class="toc-month spa-toc-month" onclick="this.classList.toggle('active')">
                                     <span>📅 {{ month }} ({{ data.positions.length }} tickers)</span>
                                     <small>(<span :class="getValClass(data.total_gl)">{{ formatCommas(data.total_gl, true) }} SGD</span>)</small>
                                 </div>
@@ -42,14 +70,14 @@
 
                 <!-- Main Contents -->
                 <div class="main-content spa-closed-main">
-                    <div v-for="group in closedReport.body" :key="group.title" class="report-group spa-mb-45">
+                    <div v-for="group in closedReport.body" :key="group.title" :id="'group-' + slugify(group.title)" class="report-group spa-mb-45">
                         <h2 class="spa-group-heading">
                             <span>{{ group.year }} – {{ group.month_name }}</span>
                             <small class="spa-val-lg-bold" :class="getValClass(group.total_gl)">{{ formatCommas(group.total_gl, true) }} SGD</small>
                         </h2>
                         
-                        <!-- Loop symbol card positions -->
-                        <div v-for="p in group.positions" :key="p.symbol" :id="slugify(p.symbol)" class="spa-symbol-card">
+                        <!-- 1 row per stock layout -->
+                        <div v-for="p in group.positions" :key="p.symbol" :id="slugify(p.symbol)" class="spa-symbol-card spa-closed-card">
                             <h2 class="symbol-card-header spa-modal-header">
                                 <div class="header-content">
                                     <div class="title spa-flex-center-gap-8">
