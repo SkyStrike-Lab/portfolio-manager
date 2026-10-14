@@ -175,10 +175,10 @@
                                 </div>
                             </div>
 
-                            <!-- Transactions and Dividends Accordions -->
-                            <div class="symbol-card-lower spa-card-lower">
+                            <!-- Expandable history dropdown lists (Transactions & Income) -->
+                            <div class="symbol-card-lower spa-mt-15">
                                 <div class="tx-section-header">
-                                    <h3 class="spa-section-title">Transactions</h3>
+                                    <h3>Transactions</h3>
                                     <button class="txv-trigger-btn"
                                             :data-symbol="p.symbol"
                                             :data-avg-cost="p.metrics?.average_buy_price || 0"
@@ -189,78 +189,72 @@
                                         📈 Chart
                                     </button>
                                 </div>
-                                <div class="spa-flex-col-gap8-mb25">
-                                    <details v-for="grp in groupTransactionsByYear(p.transactions)" :key="grp.year" class="tx-details-wrapper">
+                                <details v-for="grp in groupTransactionsByYear(p.transactions)" :key="grp.year" class="tx-details-wrapper spa-mt-10">
+                                    <summary>
+                                        {{ grp.year }} (Qty: {{ formatCommas(grp.totalQty, false, 0) }}, Net: <span :class="getValClass(grp.sgdImpact)">{{ formatCommas(grp.netVal, true) }} {{ p.currency }}</span>)
+                                    </summary>
+                                    <div class="details-content spa-pt-10">
+                                        <ul class="tx-list tx-list-clean">
+                                            <li v-for="t in grp.list" :key="t.date" class="tx-item tx-item-row" :data-action="t.action.toLowerCase()">
+                                                <span :class="t.action.toLowerCase() === 'buy' ? 'pos-val' : 'neg-val'">[{{ t.action.toUpperCase() }}]</span>
+                                                [{{ t.date }}]
+                                                {{ t.qty }} @ {{ formatCommas(t.price) }} {{ p.currency }}, 
+                                                Fees: {{ formatCommas(t.fee) }} 
+                                                ({{ formatCommas(t.qty * t.price + (t.action.toLowerCase() === 'buy' ? t.fee : -t.fee)) }} {{ p.currency }})
+                                                <span v-if="t.notes" class="tx-notes text-muted text-xs spa-ml-5 font-italic">
+                                                    — {{ t.notes }}
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </details>
+
+                                <!-- Income / Dividends section grouped by year -->
+                                <div v-if="p.income && p.income.length > 0" class="spa-mt-20">
+                                    <h3 class="tx-section-header spa-mt-25-mb-8">Income Dividends</h3>
+                                    <details v-for="grp in groupIncomeByYear(p.income)" :key="grp.year" class="spa-mt-8">
                                         <summary>
-                                            {{ grp.year }} (Qty: {{ formatCommas(grp.totalQty, false, 0) }}, Net: <span :class="getValClass(grp.sgdImpact)">{{ formatCommas(grp.netVal, true) }} {{ p.currency }}</span>)
+                                            {{ grp.year }} (Net: <span class="spa-income-value-success">+{{ formatCommas(grp.summary.total_net) }} {{ p.currency }}</span>)
                                         </summary>
                                         <div class="details-content spa-pt-10">
-                                            <ul class="tx-list tx-list-clean">
-                                                <li v-for="t in grp.list" :key="t.date" class="tx-item tx-item-row" :data-action="t.action.toLowerCase()">
-                                                    <span :class="t.action.toLowerCase() === 'buy' ? 'pos-val' : 'neg-val'">[{{ t.action.toUpperCase() }}]</span>
-                                                    [{{ t.date }}]
-                                                    {{ t.qty }} @ {{ formatCommas(t.price) }} {{ p.currency }}, 
-                                                    Fees: {{ formatCommas(t.fee) }} 
-                                                    ({{ formatCommas(t.qty * t.price + (t.action.toLowerCase() === 'buy' ? t.fee : -t.fee)) }} {{ p.currency }})
-                                                    <span v-if="t.notes" class="tx-notes text-muted text-xs spa-ml-5 font-italic">
-                                                        — {{ t.notes }}
-                                                    </span>
+                                            <div class="income-year-summary spa-income-summary-card">
+                                                <div>
+                                                    <span class="spa-income-label">Gross Income</span>
+                                                    <span v-text="formatCommas(grp.summary.total_gross) + ' ' + p.currency" class="spa-weight-bold"></span>
+                                                </div>
+                                                <div>
+                                                    <span class="spa-income-label">Tax Paid</span>
+                                                    <span class="spa-income-value-danger" v-text="formatCommas(grp.summary.total_tax) + ' ' + p.currency"></span>
+                                                </div>
+                                                <div>
+                                                    <span class="spa-income-label">Net Income</span>
+                                                    <span v-text="formatCommas(grp.summary.total_net) + ' ' + p.currency" class="spa-income-value-success"></span>
+                                                </div>
+                                                <!-- Render ROC stats only if ROC exists -->
+                                                <template v-if="grp.summary.roc_amount > 0">
+                                                    <div>
+                                                        <span class="spa-income-label">ROC</span>
+                                                        <span v-text="formatCommas(grp.summary.roc_amount) + ' ' + p.currency" class="spa-income-value-success"></span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="spa-income-label">ROC %</span>
+                                                        <span v-text="grp.summary.roc_pct.toFixed(2) + '%'" class="spa-income-value-success"></span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="spa-income-label">Actual Tax</span>
+                                                        <span v-text="formatCommas(grp.summary.actual_tax_value) + ' ' + p.currency + ' (' + grp.summary.actual_tax_rate.toFixed(2) + '%)'" class="spa-income-value-accent"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                            <ul class="spa-income-list">
+                                                <li v-for="inc in grp.list" :key="inc.date">
+                                                    <strong>{{ inc.date }}</strong>: Net: {{ formatCommas(inc.net) }} {{ p.currency }} 
+                                                    (Gross: {{ formatCommas(inc.amt) }}, Tax: {{ formatCommas(inc.tax) }}<span v-if="inc.qty && inc.qty > 0.0001">, Qty: {{ inc.qty }}, Net/Share: {{ formatCommas(inc.net_per_share, false, 4) }} {{ p.currency }}</span>)<span v-if="inc.note" v-text="', ' + inc.note"></span>
                                                 </li>
                                             </ul>
                                         </div>
                                     </details>
                                 </div>
-
-                                <!-- Dividends Accordion -->
-                                <template v-if="p.income && p.income.length > 0">
-                                    <div class="tx-section-header">
-                                        <h3 class="spa-section-title">Income Dividends</h3>
-                                    </div>
-                                    <div class="spa-flex-col-gap8">
-                                        <details v-for="grp in groupIncomeByYear(p.income)" :key="grp.year" class="tx-details-wrapper">
-                                            <summary class="spa-year-summary-toggle">
-                                                {{ grp.year }} (Net: <span class="spa-color-success">+{{ formatCommas(grp.summary.total_net) }} {{ p.currency }}</span>)
-                                            </summary>
-                                            <div class="details-content spa-pt10-pb10">
-                                                <div class="spa-income-mini-card">
-                                                    <div>
-                                                        <span class="spa-income-label">Gross Income</span>
-                                                        <span v-text="formatCommas(grp.summary.total_gross) + ' ' + p.currency" class="spa-weight-bold"></span>
-                                                    </div>
-                                                    <div>
-                                                        <span class="spa-income-label">Tax Paid</span>
-                                                        <span class="spa-value-danger-bold" v-text="formatCommas(grp.summary.total_tax) + ' ' + p.currency"></span>
-                                                    </div>
-                                                    <div>
-                                                        <span class="spa-income-label">Net Income</span>
-                                                        <span v-text="formatCommas(grp.summary.total_net) + ' ' + p.currency" class="spa-income-value-success"></span>
-                                                    </div>
-                                                    <!-- Render ROC stats only if ROC exists -->
-                                                    <template v-if="grp.summary.roc_amount > 0">
-                                                        <div>
-                                                            <span class="spa-income-label">ROC</span>
-                                                            <span v-text="formatCommas(grp.summary.roc_amount) + ' ' + p.currency" class="spa-income-value-success"></span>
-                                                        </div>
-                                                        <div>
-                                                            <span class="spa-income-label">ROC %</span>
-                                                            <span v-text="grp.summary.roc_pct.toFixed(2) + '%'" class="spa-income-value-success"></span>
-                                                        </div>
-                                                        <div>
-                                                            <span class="spa-income-label">Actual Tax</span>
-                                                            <span v-text="formatCommas(grp.summary.actual_tax_value) + ' ' + p.currency + ' (' + grp.summary.actual_tax_rate.toFixed(2) + '%)'" class="spa-income-value-accent"></span>
-                                                        </div>
-                                                    </template>
-                                                </div>
-                                                <ul class="spa-income-list">
-                                                    <li v-for="inc in grp.list" :key="inc.date">
-                                                        <strong>{{ inc.date }}</strong>: Net: {{ formatCommas(inc.net) }} {{ p.currency }} 
-                                                        (Gross: {{ formatCommas(inc.amt) }}, Tax: {{ formatCommas(inc.tax) }}<span v-if="inc.qty && inc.qty > 0.0001">, Qty: {{ inc.qty }}, Net/Share: {{ formatCommas(inc.net_per_share, false, 4) }} {{ p.currency }}</span>)<span v-if="inc.note" v-text="', ' + inc.note"></span>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </details>
-                                    </div>
-                                </template>
                             </div>
                         </div>
                     </div>
