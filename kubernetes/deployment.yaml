@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio-manager
+  labels:
+    app: portfolio-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portfolio-manager
+  template:
+    metadata:
+      labels:
+        app: portfolio-manager
+    spec:
+      envFrom:
+        - configMapRef:
+            name: portfolio-manager-config
+      containers:
+        - name: portfolio-manager
+          image: registry.home/portfolio-manager:placeholder
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: portfolio-manager-config
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: config
+              mountPath: /app/config
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: portfolio-manager-data-pvc
+        - name: config
+          persistentVolumeClaim:
+            claimName: portfolio-manager-config-pvc
