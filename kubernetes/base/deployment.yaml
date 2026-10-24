@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio-manager
+  labels:
+    app: portfolio-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portfolio-manager
+  template:
+    metadata:
+      labels:
+        app: portfolio-manager
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: fix-permissions
+          image: busybox:latest
+          command: ["sh", "-c", "chown -R 1000:1000 /app/data"]
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+          volumeMounts:
+            - name: portfolio-data
+              mountPath: /app/data
+      containers:
+        - name: portfolio-manager
+          image: registry.home/portfolio-manager:placeholder
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: portfolio-manager-config
+          volumeMounts:
+            - name: portfolio-data
+              mountPath: /app/data
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: portfolio-data
+          persistentVolumeClaim:
+            claimName: portfolio-manager-data-pvc

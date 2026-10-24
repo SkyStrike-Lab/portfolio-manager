@@ -1,0 +1,7 @@
+- op: replace
+  path: /spec/template/spec/volumes/0
+  value:
+    name: portfolio-data
+    hostPath:
+      path: /home/kirito/homelab/services/portfolio-manager/data
+      type: DirectoryOrCreate

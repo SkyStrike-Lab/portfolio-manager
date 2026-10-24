@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: portfolio-manager-config
+data:
+  PORTFOLIO_DB_FILE: /app/data/portfolio.db
+  exchange_rates_file: /app/data/exchange_rates.json
+  exchange_rates_max_poll_hours: "6"
+  exchange_rates_decimals: "4"
