@@ -1,6 +1,9 @@
+import os
+import json
 import logging
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
+from typing import Optional
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, UploadFile, File, Form
 from core.database import get_connection
 from core.schemas import ManualPriceOverride, ManualPriceDetailOverride
 from core.cache import rebuild_dashboard_sync, update_prices_and_rebuild
@@ -530,6 +533,171 @@ def get_price_history(
             "interval": interval,
             "adjusted": adjusted,
             "prices": prices,
+        }
+
+    finally:
+        conn.close()
+
+
+@router.post("/api/prices/import-history")
+async def import_price_history(
+    file: UploadFile = File(None),
+    file_path: Optional[str] = Form(None),
+    dry_run: bool = Form(False),
+):
+    """
+    Import OHLC stock price history from JSON.
+    Skips entries if the close price matches existing data.
+    If imported (new date or changed close price), stores/updates as is_manual=1 (override),
+    syncs latest price snapshots to ticker_prices, and rebuilds dashboard cache.
+    """
+    logger.info("POST /api/prices/import-history (file=%s, file_path=%s, dry_run=%s)", 
+                file.filename if file else None, file_path, dry_run)
+    raw_content = None
+
+    if file is not None:
+        try:
+            content_bytes = await file.read()
+            raw_content = json.loads(content_bytes.decode("utf-8"))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to parse uploaded JSON file: {e}")
+    elif file_path and file_path.strip():
+        clean_path = file_path.strip()
+        if not os.path.exists(clean_path):
+            raise HTTPException(status_code=404, detail=f"File not found: {clean_path}")
+        try:
+            with open(clean_path, "r", encoding="utf-8") as f:
+                raw_content = json.load(f)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Failed to parse JSON file at {clean_path}: {e}")
+    else:
+        # Default fallback to tmp/history.json if exists
+        default_path = "tmp/history.json"
+        if os.path.exists(default_path):
+            try:
+                with open(default_path, "r", encoding="utf-8") as f:
+                    raw_content = json.load(f)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to parse default {default_path}: {e}")
+        else:
+            raise HTTPException(status_code=400, detail="No file uploaded and no file_path specified.")
+
+    if not isinstance(raw_content, dict):
+        raise HTTPException(status_code=400, detail="Expected JSON format: object mapping ticker symbols to bar arrays.")
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+
+        # Query all existing tickers to map symbols -> ticker_id
+        cursor.execute("SELECT id, symbol FROM tickers")
+        ticker_map = {r["symbol"].upper(): r["id"] for r in cursor.fetchall()}
+
+        total_evaluated = 0
+        skipped = 0
+        overridden = 0
+        inserted = 0
+        unknown_tickers = set()
+        affected_symbols = set()
+        details_log = []
+
+        for raw_symbol, bars in raw_content.items():
+            if not isinstance(bars, list):
+                continue
+
+            # Normalize symbol: e.g. AMHE.U -> AMHE-U
+            sym_norm = raw_symbol.replace(".", "-").upper()
+            ticker_id = ticker_map.get(sym_norm)
+            if not ticker_id:
+                unknown_tickers.add(raw_symbol)
+                continue
+
+            for bar in bars:
+                if not isinstance(bar, dict) or "date" not in bar or "close" not in bar:
+                    continue
+
+                total_evaluated += 1
+                b_date = str(bar["date"]).strip()
+                try:
+                    b_close = round(float(bar["close"]), 4)
+                except (ValueError, TypeError):
+                    continue
+
+                b_open = round(float(bar["open"]), 4) if bar.get("open") is not None else b_close
+                b_high = round(float(bar["high"]), 4) if bar.get("high") is not None else max(b_open, b_close)
+                b_low = round(float(bar["low"]), 4) if bar.get("low") is not None else min(b_open, b_close)
+
+                # Check existing entry in ticker_price_history
+                cursor.execute("""
+                    SELECT close, is_manual FROM ticker_price_history
+                    WHERE symbol = ? AND date = ? AND interval = '1d'
+                """, (sym_norm, b_date))
+                existing = cursor.fetchone()
+
+                if existing is not None:
+                    db_close = float(existing["close"])
+                    # If prices match within tolerance, skip
+                    if abs(db_close - b_close) < 0.0001:
+                        skipped += 1
+                        continue
+                    else:
+                        # Price differs: update as manual override
+                        overridden += 1
+                        details_log.append({
+                            "symbol": sym_norm,
+                            "date": b_date,
+                            "action": "overridden",
+                            "old_close": db_close,
+                            "new_close": b_close
+                        })
+                        if not dry_run:
+                            cursor.execute("""
+                                UPDATE ticker_price_history
+                                SET open = ?, high = ?, low = ?, close = ?, adj_close = ?, is_manual = 1
+                                WHERE symbol = ? AND date = ? AND interval = '1d'
+                            """, (b_open, b_high, b_low, b_close, b_close, sym_norm, b_date))
+                            affected_symbols.add((sym_norm, ticker_id))
+                else:
+                    # New date: insert as manual override
+                    inserted += 1
+                    details_log.append({
+                        "symbol": sym_norm,
+                        "date": b_date,
+                        "action": "inserted",
+                        "close": b_close
+                    })
+                    if not dry_run:
+                        cursor.execute("""
+                            INSERT INTO ticker_price_history (symbol, date, interval, open, high, low, close, adj_close, is_manual)
+                            VALUES (?, ?, '1d', ?, ?, ?, ?, ?, 1)
+                        """, (sym_norm, b_date, b_open, b_high, b_low, b_close, b_close))
+                        affected_symbols.add((sym_norm, ticker_id))
+
+        if not dry_run:
+            conn.commit()
+
+            # Sync latest price snapshots to ticker_prices for all affected symbols
+            for sym, tid in affected_symbols:
+                _sync_ticker_prices_from_history(conn, sym, tid)
+            conn.commit()
+
+            # Trigger cache rebuild if any records were updated
+            if inserted > 0 or overridden > 0:
+                from core.cache import clear_dashboard_cache
+                from services.rebuild_dashboard import rebuild_all_views
+                clear_dashboard_cache()
+                rebuild_all_views(conn, price_mode="intraday")
+                rebuild_all_views(conn, price_mode="closing")
+
+        return {
+            "status": "success",
+            "dry_run": dry_run,
+            "total_evaluated": total_evaluated,
+            "skipped": skipped,
+            "overridden": overridden,
+            "inserted": inserted,
+            "unknown_tickers": sorted(list(unknown_tickers)),
+            "details_sample": details_log[:50]
         }
 
     finally:

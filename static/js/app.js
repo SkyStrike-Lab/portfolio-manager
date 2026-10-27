@@ -4116,3 +4116,73 @@ window.triggerIbSystemdAction = async function(action) {
         await checkSystemIbStatus();
     }
 };
+
+window.handleAdminImportPriceHistory = async function(dryRun = false) {
+    const btn = document.getElementById(dryRun ? "btn-admin-preview-history" : "btn-admin-import-history");
+    const fileInput = document.getElementById("price-history-upload-file");
+    const pathInput = document.getElementById("price-history-upload-path");
+    const consolePre = document.getElementById("patch-console-pre");
+
+    const originalText = btn ? btn.innerText : "";
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = "0.6";
+        btn.innerText = dryRun ? "🔍 Previewing..." : "📥 Importing...";
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append("dry_run", dryRun ? "true" : "false");
+
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            formData.append("file", fileInput.files[0]);
+        } else if (pathInput && pathInput.value.trim()) {
+            formData.append("file_path", pathInput.value.trim());
+        }
+
+        const res = await fetch("/api/prices/import-history", {
+            method: "POST",
+            body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            const prefix = dryRun ? "[DRY RUN PREVIEW]" : "[SUCCESS]";
+            const summary = `${prefix} Total: ${data.total_evaluated} bars | Skipped (matches): ${data.skipped} | Overridden: ${data.overridden} | Inserted: ${data.inserted}`;
+            showToast(summary);
+
+            if (consolePre) {
+                let log = `\n[${new Date().toLocaleTimeString()}] ${summary}\n`;
+                if (data.unknown_tickers && data.unknown_tickers.length > 0) {
+                    log += `  Ignored unknown tickers: ${data.unknown_tickers.join(", ")}\n`;
+                }
+                if (data.details_sample && data.details_sample.length > 0) {
+                    log += `  Sample updates (${data.details_sample.length}):\n`;
+                    data.details_sample.slice(0, 15).forEach(d => {
+                        if (d.action === "overridden") {
+                            log += `    • ${d.symbol} ${d.date}: ${d.old_close} -> ${d.new_close} (overridden)\n`;
+                        } else {
+                            log += `    • ${d.symbol} ${d.date}: ${d.close} (inserted override)\n`;
+                        }
+                    });
+                }
+                consolePre.textContent += log;
+                consolePre.scrollTop = consolePre.scrollHeight;
+            }
+        } else {
+            showToast(data.detail || "Failed to import price history.", "error");
+            if (consolePre) {
+                consolePre.textContent += `\n[${new Date().toLocaleTimeString()}] ERROR: ${data.detail || "Unknown error"}\n`;
+            }
+        }
+    } catch (err) {
+        console.error("Price history import error:", err);
+        showToast("Error connecting to server.", "error");
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.innerText = originalText;
+        }
+    }
+};

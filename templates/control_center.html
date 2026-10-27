@@ -615,12 +615,28 @@
                     </div>
 
                     <!-- Rebuild Dashboard Cache -->
-                    <div class="form-group">
+                    <div class="form-group maintenance-group-border">
                         <label class="maintenance-field-label">Rebuild Dashboard Cache</label>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
                             Re-calculates metrics, position weights, cash summaries, and ApexCharts data, re-caching in-memory JSON views.
                         </p>
-                        <button id="btn-admin-rebuild-cache" class="btn" style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; font-weight: 600; cursor: pointer; padding: 8px 16px; border-radius: 6px;" onclick="handleAdminRebuildCache()">🔄 Rebuild Dashboard Cache</button>
+                        <button id="btn-admin-rebuild-cache" class="btn maintenance-btn-cache-blue" onclick="handleAdminRebuildCache()">🔄 Rebuild Dashboard Cache</button>
+                    </div>
+
+                    <!-- Import Historical Price Overrides -->
+                    <div class="form-group maintenance-group-border">
+                        <label class="maintenance-field-label">📈 Bulk Import Price History Overrides</label>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
+                            Uploads OHLC history (e.g. from <code>tmp/history.json</code>). Entries with matching close prices are skipped. New or differing dates are imported as manual overrides (<code>is_manual = 1</code>).
+                        </p>
+                        <div class="maintenance-file-upload-box">
+                            <input type="file" id="price-history-upload-file" accept=".json" class="modal-exchange-select" style="padding: 6px;" />
+                            <input type="text" id="price-history-upload-path" placeholder="Or server path (default: tmp/history.json)" class="modal-exchange-select maintenance-backup-input" />
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                            <button id="btn-admin-import-history" class="btn maintenance-btn-history-purple" onclick="handleAdminImportPriceHistory(false)">📥 Import Overrides</button>
+                            <button id="btn-admin-preview-history" class="btn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-secondary); padding: 8px 12px; border-radius: 6px; cursor: pointer;" onclick="handleAdminImportPriceHistory(true)">🔍 Dry Run Preview</button>
+                        </div>
                     </div>
 
                     <!-- IBKR Systemd Action Triggers -->
