@@ -75,12 +75,21 @@ function updatePaginationControls(selector, currentPage, totalItems, onPageChang
 // Toast Notification
 function showToast(message, type = "success") {
     const container = document.getElementById("toast-container");
+    if (!container) return;
+
+    let displayMessage = message;
+    if (Array.isArray(message)) {
+        displayMessage = message.map(m => (typeof m === 'object' && m !== null ? (m.msg || m.detail || JSON.stringify(m)) : String(m))).join("; ");
+    } else if (typeof message === 'object' && message !== null) {
+        displayMessage = message.msg || message.detail || JSON.stringify(message);
+    }
+
     const toast = document.createElement("div");
     toast.className = "toast";
     if (type === "error") {
         toast.style.borderLeftColor = "var(--color-loss)";
     }
-    toast.textContent = message;
+    toast.textContent = displayMessage;
     container.appendChild(toast);
     
     setTimeout(() => {
@@ -3648,6 +3657,10 @@ function setupTransactionModalCalculation() {
             const backupName = input.value.trim();
             if (!backupName) {
                 showToast("Please enter a backup name.", "error");
+                return;
+            }
+            if (!backupName.endsWith(".db")) {
+                showToast("Backup filename must end with '.db'", "error");
                 return;
             }
 
