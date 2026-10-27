@@ -653,22 +653,12 @@ tr.child-row td:first-child {
 }
 
 /* Maintenance & Patching panel layout */
+.operations-layout,
 .maintenance-layout {
     display: flex;
     flex-direction: column;
     gap: 20px;
     margin-bottom: 2rem;
-}
-.maintenance-top-grid {
-    display: grid;
-    grid-template-columns: 1.65fr 1fr;
-    gap: 20px;
-    align-items: start;
-}
-@media (max-width: 1024px) {
-    .maintenance-top-grid {
-        grid-template-columns: 1fr;
-    }
 }
 .maintenance-card {
     padding: 1.5rem;
@@ -709,6 +699,17 @@ tr.child-row td:first-child {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+}
+.admin-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .admin-grid-layout {
+        grid-template-columns: 1fr;
+    }
 }
 .maintenance-backup-input-group {
     display: flex;
@@ -780,17 +781,6 @@ tr.child-row td:first-child {
     border-top: 1px solid var(--card-border);
     padding-top: 1rem;
 }
-.maintenance-bottom-grid {
-    display: grid;
-    grid-template-columns: 360px 1fr;
-    gap: 24px;
-    align-items: stretch;
-}
-@media (max-width: 1024px) {
-    .maintenance-bottom-grid {
-        grid-template-columns: 1fr;
-    }
-}
 .maintenance-console-header {
     font-weight: 600;
     font-size: 0.9rem;
@@ -806,7 +796,7 @@ tr.child-row td:first-child {
     cursor: pointer;
     font-size: 0.8rem;
 }
-.maintenance-console-pre {
+.operations-console-pre {
     background: #000;
     border: 1px solid var(--card-border);
     border-radius: 4px;
@@ -815,7 +805,22 @@ tr.child-row td:first-child {
     font-family: monospace;
     font-size: 0.85rem;
     height: 420px;
-    max-height: 520px;
+    max-height: 550px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    box-sizing: border-box;
+}
+.maintenance-console-pre {
+    background: #000;
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 1rem;
+    color: #39ff14;
+    font-family: monospace;
+    font-size: 0.85rem;
+    height: 240px;
+    max-height: 350px;
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-all;

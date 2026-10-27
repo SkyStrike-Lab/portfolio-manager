@@ -177,10 +177,10 @@
     <div class="category-sub-nav">
         <div class="report-nav-pills local-nav">
             <a class="nav-pill active" id="nav-settings">Configuration</a>
-            <a class="nav-pill" id="nav-import">Data Imports</a>
+            <a class="nav-pill" id="nav-operations">Operations</a>
             <a class="nav-pill" id="nav-capital">Base Capital</a>
             <a class="nav-pill" id="nav-dailycash">Daily Cash</a>
-            <a class="nav-pill" id="nav-maintenance">Maintenance</a>
+            <a class="nav-pill" id="nav-maintenance">System Admin</a>
         </div>
     </div>
 
@@ -224,211 +224,6 @@
                             <button type="submit" id="settings-save-btn" class="btn btn-primary settings-save-btn">Save settings</button>
                         </div>
                     </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION: DATA IMPORTS -->
-        <section id="section-import" style="display: none;">
-            <div class="table-card import-card-wrapper">
-                <div class="modal-tabs import-tabs-wrapper">
-                    <button type="button" class="modal-tab-btn active" id="btn-import-tab-ibkr">IBKR Dividend XML</button>
-                    <button type="button" class="modal-tab-btn" id="btn-import-tab-snowball">Snowball CSV</button>
-                    <button type="button" class="modal-tab-btn" id="btn-import-tab-capital">Base Capital CSV</button>
-                </div>
-
-                <!-- TAB: BASE CAPITAL CSV -->
-                <div id="import-tab-capital-content" class="tab-wrapper-content" style="display: none;">
-                    <div class="import-split-grid">
-                        <div class="import-form-pane">
-                            <div class="table-header-row import-title-margin">
-                                <div class="table-title">Upload Base Capital CSV</div>
-                            </div>
-                            <form id="capital-upload-form">
-                                <div class="form-group">
-                                    <label for="capital-upload-file">Capital CSV File (capital.csv)</label>
-                                    <input type="file" id="capital-upload-file" accept=".csv" required>
-                                </div>
-                                <div class="margin-top-20">
-                                    <button type="submit" class="btn btn-primary import-submit-btn">Upload Capital Entries</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="import-info-pane">
-                            <h4 class="info-pane-title">
-                                <span>Capital CSV Specs</span>
-                                <a href="{{ BASE_PATH }}/static/templates/capital_template.csv" download="capital_template.csv" class="fd-reference-link">⬇️ Download Template</a>
-                            </h4>
-                            <div class="info-pane-section">
-                                <h5>Required CSV Format</h5>
-                                <table class="schema-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Column</th>
-                                            <th>Type</th>
-                                            <th>Description</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><strong>Broker</strong></td>
-                                            <td>String</td>
-                                            <td>Broker name (e.g. IBKR, MOOMOO).</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Date</strong></td>
-                                            <td>Date</td>
-                                            <td>Date in YYYY-MM-DD or YYYY-MMM DD format.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Remarks</strong></td>
-                                            <td>String</td>
-                                            <td>Transaction description or remarks.</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Amount</strong></td>
-                                            <td>Decimal</td>
-                                            <td>Net capital injection amount.</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="info-pane-section">
-                                <h5>Key Rules & Assumptions</h5>
-                                <ul class="info-pane-list">
-                                    <li><strong>Four Columns Required</strong>: The uploaded CSV must contain exactly 4 columns in the order: <code>Broker</code>, <code>Date</code>, <code>Remarks</code>, and <code>Amount</code>.</li>
-                                    <li><strong>Full Overwrite</strong>: Seeding a new capital CSV will <strong>fully overwrite and delete</strong> all existing capital entries in the database.</li>
-                                    <li><strong>Case Insensitive</strong>: Broker names are stored as uppercase (e.g. <code>IBKR</code>, <code>MOOMOO</code>).</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB: IBKR DIVIDENDS -->
-                <div id="import-tab-ibkr-content" class="tab-wrapper-content">
-                    <div class="import-split-grid">
-                        <div class="import-form-pane">
-                            <div class="table-header-row import-title-margin">
-                                <div class="table-title">Import IBKR Dividends (XML)</div>
-                            </div>
-                            <form id="ibkr-import-form">
-                                <div class="form-group">
-                                    <label for="ibkr-import-file">Dividends XML File (dividend-ytd.xml)</label>
-                                    <input type="file" id="ibkr-import-file" accept=".xml" required>
-                                </div>
-                                <div class="form-row ibkr-date-row">
-                                    <div class="form-group ibkr-date-group">
-                                        <label for="ibkr-import-start-date">Start Date</label>
-                                        <input type="date" id="ibkr-import-start-date" required>
-                                    </div>
-                                    <div class="form-group ibkr-date-group">
-                                        <label for="ibkr-import-end-date">End Date</label>
-                                        <input type="date" id="ibkr-import-end-date" required>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="ibkr-import-portfolio">Fallback Target Portfolio</label>
-                                    <select id="ibkr-import-portfolio" required></select>
-                                </div>
-                                <div class="margin-top-20">
-                                    <button type="submit" class="btn btn-primary import-submit-btn">Upload & Run Import</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="import-info-pane">
-                            <h4 class="info-pane-title">IBKR XML Specs</h4>
-                            <div class="info-pane-section">
-                                <h5>Export Documentation</h5>
-                                <ul class="info-pane-list">
-                                    <li>Refer to the <a href="https://github.com/SkyStrike/portfolio-manager/blob/main/docs/ibkr_dividend_import.md" target="_blank" class="fd-reference-link">IBKR Dividend Import Guide</a> for details on the columns expected in the XML which is exported via IBKR Flex Queries.</li>
-                                    <li>JSON import is not natively available via the GUI since it is a customized JSON format of the XML (meant for advanced users anyway). XML is the native format exported by IBKR.</li>
-                                </ul>
-                            </div>
-                            <div class="info-pane-section">
-                                <h5>Expected XML Structure</h5>
-                                <ul class="info-pane-list">
-                                    <li>Must be generated as a <strong>Flex Query Activity Report</strong> from the Interactive Brokers Account Management portal.</li>
-                                    <li>The parser extracts <code>&lt;CashTransaction&gt;</code> tags where the attribute <code>type</code> is set to <code>Dividends</code> or <code>Payment In Lieu Of Dividends</code>.</li>
-                                </ul>
-                            </div>
-                            <div class="info-pane-section">
-                                <h5>Fallback Portfolio Logic</h5>
-                                <ul class="info-pane-list">
-                                    <li><strong>Symbol Mapping</strong>: If the dividend's ticker symbol is already held in an active portfolio, it is automatically routed to that portfolio. If the symbol is held across multiple IBKR portfolios, it is mapped to the portfolio containing the most recent transaction for that symbol.</li>
-                                    <li><strong>Fallback Assignment</strong>: If the ticker is new and has no transaction history in the system, the dividend is assigned to the selected <strong>Fallback Target Portfolio</strong>.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TAB: SNOWBALL CSV -->
-                <div id="import-tab-snowball-content" class="tab-wrapper-content" style="display: none;">
-                    <div class="import-split-grid">
-                        <div class="import-form-pane">
-                            <div class="table-header-row import-title-margin">
-                                <div class="table-title">Snowball Analytics Import Wizard</div>
-                            </div>
-                            <form id="import-form">
-                                <div class="form-group">
-                                    <label for="import-portfolio-select">Target Portfolio</label>
-                                    <select id="import-portfolio-select">
-                                        <option value="">-- Select or Type Portfolio Name below --</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="import-new-portfolio-name">Create Portfolio Name (if not in dropdown)</label>
-                                    <input type="text" id="import-new-portfolio-name" placeholder="e.g. Income Factory">
-                                </div>
-                                <div class="form-group">
-                                    <label for="import-holdings-file">Holdings CSV File (e.g. snowball-holdings.csv)</label>
-                                    <input type="file" id="import-holdings-file" accept=".csv" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="import-transactions-file">Transactions CSV File (e.g. snowball-transactions.csv)</label>
-                                    <input type="file" id="import-transactions-file" accept=".csv" required>
-                                </div>
-                                <div class="margin-top-20">
-                                    <button type="submit" class="btn btn-primary import-submit-btn">Run Import Wizard</button>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="import-info-pane">
-                            <h4 class="info-pane-title">
-                                <span>Snowball CSV Specs</span>
-                                <span style="display: flex; gap: 8px;">
-                                    <a href="{{ BASE_PATH }}/static/templates/snowball_holdings_template.csv" download="snowball_holdings_template.csv" class="fd-reference-link" style="font-size: 0.72rem;">⬇️ Holdings</a>
-                                    <a href="{{ BASE_PATH }}/static/templates/snowball_transactions_template.csv" download="snowball_transactions_template.csv" class="fd-reference-link" style="font-size: 0.72rem;">⬇️ Tx</a>
-                                </span>
-                            </h4>
-                            <div class="info-pane-section">
-                                <h5>Export Documentation</h5>
-                                <ul class="info-pane-list">
-                                    <li>These files should be generated directly from the website following the step-by-step instructions in the <a href="https://github.com/SkyStrike/portfolio-manager/blob/main/docs/data_migration.md" target="_blank" class="fd-reference-link">Data Migration Guide</a>.</li>
-                                </ul>
-                            </div>
-                            <div class="info-pane-section">
-                                <h5>Expected Holdings Headers</h5>
-                                <div style="font-size: 0.78rem; line-height: 1.5; color: var(--text-primary);">
-                                    <code>Holding</code>, <code>Holdings' name</code>, <code>Note</code>, <code>Shares</code>, <code>Currency</code>, <code>Share price</code>, <code>Country</code>, and <code>Portfolios</code>
-                                </div>
-                            </div>
-                            <div class="info-pane-section">
-                                <h5>Expected Transactions Headers</h5>
-                                <div style="font-size: 0.78rem; line-height: 1.5; color: var(--text-primary); margin-bottom: 12px;">
-                                    <code>Event</code>, <code>Date</code>, <code>Symbol</code>, <code>Price</code>, <code>Quantity</code>, <code>Currency</code>, <code>FeeTax</code>, <code>Exchange</code>, and <code>Note</code>
-                                </div>
-                            </div>
-                            <div class="info-pane-section">
-                                <h5>Key Rules & Assumptions</h5>
-                                <ul class="info-pane-list">
-                                    <li><strong>Portfolio Filter</strong>: If the <code>Portfolios</code> column in Holdings lists multiple items, the row is skipped unless it matches your targeted portfolio.</li>
-                                    <li><strong>Duplicate Safeguard</strong>: Transactions matching on execution timestamp, price, and ticker symbol are skipped to avoid database duplicates.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -539,76 +334,94 @@
             </div>
         </section>
 
-        <!-- SECTION: MAINTENANCE -->
-        <section id="section-maintenance" style="display: none;">
-            <div class="maintenance-layout">
+        <!-- SECTION: OPERATIONS (ROUTINE SYNC & QUICK ACTIONS) -->
+        <section id="section-operations" style="display: none;">
+            <div class="operations-layout">
                 
-                <!-- TOP 2-COLUMN GRID: DATA SYNC (FREQUENT) VS DATABASE & BACKUP (HIGH-RISK) -->
-                <div class="maintenance-top-grid">
+                <!-- TOP CARD: MARKET DATA & AUTOMATION CONTROLS -->
+                <div class="table-card maintenance-card">
+                    <div class="table-header-row maintenance-card-title">
+                        <span>⚡ Market Data & Automation Sync</span>
+                    </div>
 
-                    <!-- COLUMN 1: MARKET DATA & AUTOMATION SYNC (FREQUENT) -->
-                    <div class="table-card maintenance-card">
-                        <div class="table-header-row maintenance-card-title">
-                            <span>📈 Market Data & Automation Sync</span>
+                    <!-- Import Historical Price Overrides -->
+                    <div class="form-group maintenance-group-border">
+                        <label class="maintenance-field-label">Bulk Import Price History Overrides</label>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
+                            Uploads OHLC history (e.g. from <code>tmp/history.json</code>). Entries with matching close prices are skipped. New or differing dates are imported as manual overrides (<code>is_manual = 1</code>).
+                        </p>
+                        <div class="maintenance-file-upload-box">
+                            <input type="file" id="price-history-upload-file" accept=".json" class="modal-exchange-select" style="padding: 6px;" />
+                            <input type="text" id="price-history-upload-path" placeholder="Or server path (default: tmp/history.json)" class="modal-exchange-select maintenance-backup-input" />
                         </div>
-
-                        <!-- Import Historical Price Overrides -->
-                        <div class="form-group maintenance-group-border">
-                            <label class="maintenance-field-label">Bulk Import Price History Overrides</label>
-                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                                Uploads OHLC history (e.g. from <code>tmp/history.json</code>). Entries with matching close prices are skipped. New or differing dates are imported as manual overrides (<code>is_manual = 1</code>).
-                            </p>
-                            <div class="maintenance-file-upload-box">
-                                <input type="file" id="price-history-upload-file" accept=".json" class="modal-exchange-select" style="padding: 6px;" />
-                                <input type="text" id="price-history-upload-path" placeholder="Or server path (default: tmp/history.json)" class="modal-exchange-select maintenance-backup-input" />
-                            </div>
-                            <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
-                                <button id="btn-admin-import-history" class="btn maintenance-btn-history-purple" onclick="handleAdminImportPriceHistory(false)">📥 Import Overrides</button>
-                                <button id="btn-admin-preview-history" class="btn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-secondary); padding: 8px 12px; border-radius: 6px; cursor: pointer;" onclick="handleAdminImportPriceHistory(true)">🔍 Dry Run Preview</button>
-                            </div>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                            <button id="btn-admin-import-history" class="btn maintenance-btn-history-purple" onclick="handleAdminImportPriceHistory(false)">📥 Import Overrides</button>
+                            <button id="btn-admin-preview-history" class="btn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-secondary); padding: 8px 12px; border-radius: 6px; cursor: pointer;" onclick="handleAdminImportPriceHistory(true)">🔍 Dry Run Preview</button>
                         </div>
+                    </div>
 
-                        <!-- Administrative Price Refresh & Cache Rebuild Side-by-Side -->
-                        <div class="form-group maintenance-group-border">
-                            <div class="maintenance-2col-row">
-                                <!-- Administrative Price Refresh -->
-                                <div class="maintenance-subcard">
-                                    <div>
-                                        <label class="maintenance-field-label">Administrative Price Refresh</label>
-                                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px; line-height: 1.4;">
-                                            Bypasses session rules and timestamps to force an immediate yfinance query for <strong>all active holdings</strong>.
-                                        </p>
-                                    </div>
-                                    <button id="btn-admin-force-price-refresh" class="btn maintenance-btn-refresh-amber" style="width: 100%; text-align: center;" onclick="handleAdminForcePriceRefresh()">⚡ Force Update Prices</button>
+                    <!-- Administrative Price Refresh & Cache Rebuild Side-by-Side -->
+                    <div class="form-group maintenance-group-border">
+                        <div class="maintenance-2col-row">
+                            <!-- Administrative Price Refresh -->
+                            <div class="maintenance-subcard">
+                                <div>
+                                    <label class="maintenance-field-label">Administrative Price Refresh</label>
+                                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px; line-height: 1.4;">
+                                        Bypasses session rules and timestamps to force an immediate yfinance query for <strong>all active holdings</strong>.
+                                    </p>
                                 </div>
-
-                                <!-- Rebuild Dashboard Cache -->
-                                <div class="maintenance-subcard">
-                                    <div>
-                                        <label class="maintenance-field-label">Rebuild Dashboard Cache</label>
-                                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px; line-height: 1.4;">
-                                            Re-calculates metrics, position weights, cash summaries, and ApexCharts, re-caching in-memory views.
-                                        </p>
-                                    </div>
-                                    <button id="btn-admin-rebuild-cache" class="btn maintenance-btn-cache-blue" style="width: 100%; text-align: center;" onclick="handleAdminRebuildCache()">🔄 Rebuild Cache</button>
-                                </div>
+                                <button id="btn-admin-force-price-refresh" class="btn maintenance-btn-refresh-amber" style="width: 100%; text-align: center;" onclick="handleAdminForcePriceRefresh()">⚡ Force Update Prices</button>
                             </div>
-                        </div>
 
-                        <!-- IBKR Systemd Action Triggers -->
-                        <div class="form-group maintenance-group-border">
-                            <label class="maintenance-field-label">🤖 IBKR Systemd Action Triggers</label>
-                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                                Generates JSON trigger payload files in <code>/app/triggers/ib/</code> for external systemd watcher services.
-                            </p>
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <button id="btn-ib-download-data" class="btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('download_data')">🔄 Trigger IBKR Data Download</button>
-                                <button id="btn-ib-flex-dividend" class="btn" style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.4); color: #a78bfa; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('flex_dividend')">💰 Trigger Dividend Flex Report</button>
+                            <!-- Rebuild Dashboard Cache -->
+                            <div class="maintenance-subcard">
+                                <div>
+                                    <label class="maintenance-field-label">Rebuild Dashboard Cache</label>
+                                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px; line-height: 1.4;">
+                                        Re-calculates metrics, position weights, cash summaries, and ApexCharts, re-caching in-memory views.
+                                    </p>
+                                </div>
+                                <button id="btn-admin-rebuild-cache" class="btn maintenance-btn-cache-blue" style="width: 100%; text-align: center;" onclick="handleAdminRebuildCache()">🔄 Rebuild Cache</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- COLUMN 2: DATABASE BACKUP & RESTORE (HIGH-RISK AREA) -->
+                    <!-- IBKR Systemd Action Triggers -->
+                    <div class="form-group">
+                        <label class="maintenance-field-label">🤖 IBKR Systemd Action Triggers</label>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
+                            Generates JSON trigger payload files in <code>/app/triggers/ib/</code> for external systemd watcher services.
+                        </p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="btn-ib-download-data" class="btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('download_data')">🔄 Trigger IBKR Data Download</button>
+                            <button id="btn-ib-flex-dividend" class="btn" style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.4); color: #a78bfa; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('flex_dividend')">💰 Trigger Dividend Flex Report</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM CARD: UNIFIED ACTIVITY & EXECUTION LOGS -->
+                <div class="table-card maintenance-card">
+                    <div class="maintenance-console-header">
+                        <div class="table-header-row maintenance-card-title" style="margin-bottom: 0;">
+                            <span>🖥️ Activity & Execution Logs</span>
+                        </div>
+                        <button id="btn-clear-logs" class="maintenance-console-clear-btn" onclick="document.getElementById('patch-console-pre').textContent = 'Console cleared.'">Clear logs</button>
+                    </div>
+                    <pre id="patch-console-pre" class="operations-console-pre">Console ready. Operations activity logs (price imports, cache rebuilds, and IBKR triggers) will stream here.</pre>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION: SYSTEM ADMIN (RARE / INFREQUENT TASKS) -->
+        <section id="section-maintenance" style="display: none;">
+            <div class="maintenance-layout">
+                
+                <!-- TOP GRID: DATABASE BACKUP & RESTORE + RUN SYSTEM PATCHES -->
+                <div class="admin-grid-layout">
+
+                    <!-- COLUMN 1: DATABASE BACKUP & RESTORE -->
                     <div class="table-card maintenance-card">
                         <div class="table-header-row maintenance-card-title">
                             <span>💾 Database Backup & Restore</span>
@@ -619,7 +432,7 @@
                             <span class="maintenance-warning-icon">⚠️</span>
                             <div>
                                 <div class="maintenance-warning-title">High-Risk Operations Area</div>
-                                Restoring a database will <strong>overwrite your current data permanently</strong>. Running database patches can modify schema tables and records. Creating a fresh database backup is <strong>highly recommended</strong> before proceeding with any action.
+                                Restoring a database will <strong>overwrite current data permanently</strong>. Creating a fresh database backup is <strong>highly recommended</strong> before proceeding.
                             </div>
                         </div>
                         
@@ -658,49 +471,223 @@
                                 </div>
                             </div>
                             <button id="btn-db-restore" class="btn btn-danger">Restore Selected Backup</button>
-                            <span class="maintenance-restore-warning">🚨 WARNING: Restoring will overwrite the current database file. This takes effect immediately.</span>
+                            <span class="maintenance-restore-warning">🚨 Restoring will overwrite the active database file immediately.</span>
                         </div>
+                    </div>
+
+                    <!-- COLUMN 2: RUN SYSTEM PATCHES -->
+                    <div class="table-card maintenance-card">
+                        <div class="table-header-row maintenance-card-title">
+                            <span>🛠️ Run System Patches</span>
+                        </div>
+                        
+                        <!-- Select Patch -->
+                        <div class="form-group">
+                            <label for="patch-select" class="maintenance-field-label">Select Maintenance Patch</label>
+                            <select id="patch-select" class="modal-exchange-select">
+                                <option value="">-- Select a patch to load --</option>
+                            </select>
+                        </div>
+
+                        <!-- Patch Description Card -->
+                        <div id="patch-desc-card" class="info-card maintenance-desc-card">
+                            <div id="patch-desc-text" class="maintenance-desc-text"></div>
+                        </div>
+
+                        <!-- Dynamic Parameters Fields Form -->
+                        <form id="patch-params-form" class="maintenance-params-form">
+                            <div id="patch-params-fields"></div>
+                        </form>
+                        
+                        <!-- Execute Button -->
+                        <button id="btn-patch-execute" class="btn btn-primary" style="width: 100%; margin-top: 8px;" disabled>Execute Patch</button>
+
+                        <!-- Patch Execution Log Output -->
+                        <div class="maintenance-console-header" style="margin-top: 1.5rem;">
+                            <span>Patch Output Log:</span>
+                            <button class="maintenance-console-clear-btn" onclick="document.getElementById('admin-patch-console-pre').textContent = 'Console cleared.'">Clear</button>
+                        </div>
+                        <pre id="admin-patch-console-pre" class="maintenance-console-pre">Select a patch and execute to view output logs here.</pre>
                     </div>
 
                 </div>
 
-                <!-- FULL-WIDTH BOTTOM CARD: SYSTEM PATCHES & UNIFIED CONSOLE LOG -->
-                <div class="table-card maintenance-card">
+                <!-- CARD 2: DATA IMPORTS & FILE MIGRATIONS -->
+                <div class="table-card maintenance-card" style="margin-top: 20px;">
                     <div class="table-header-row maintenance-card-title">
-                        <span>🛠️ System Patches & Unified Maintenance Console</span>
+                        <span>📥 Data Imports & File Migrations</span>
                     </div>
 
-                    <div class="maintenance-bottom-grid">
-                        <!-- Left inside card: Patch selector & execution -->
-                        <div>
-                            <div class="form-group">
-                                <label for="patch-select" class="maintenance-field-label">Select Maintenance Patch</label>
-                                <select id="patch-select" class="modal-exchange-select">
-                                    <option value="">-- Select a patch to load --</option>
-                                </select>
-                            </div>
+                    <div class="modal-tabs import-tabs-wrapper" style="margin-bottom: 20px;">
+                        <button type="button" class="modal-tab-btn active" id="btn-import-tab-ibkr">IBKR Dividend XML</button>
+                        <button type="button" class="modal-tab-btn" id="btn-import-tab-snowball">Snowball CSV</button>
+                        <button type="button" class="modal-tab-btn" id="btn-import-tab-capital">Base Capital CSV</button>
+                    </div>
 
-                            <!-- Patch Description Card -->
-                            <div id="patch-desc-card" class="info-card maintenance-desc-card">
-                                <div id="patch-desc-text" class="maintenance-desc-text"></div>
+                    <!-- TAB: BASE CAPITAL CSV -->
+                    <div id="import-tab-capital-content" class="tab-wrapper-content" style="display: none;">
+                        <div class="import-split-grid">
+                            <div class="import-form-pane">
+                                <div class="table-header-row import-title-margin">
+                                    <div class="table-title">Upload Base Capital CSV</div>
+                                </div>
+                                <form id="capital-upload-form">
+                                    <div class="form-group">
+                                        <label for="capital-upload-file">Capital CSV File (capital.csv)</label>
+                                        <input type="file" id="capital-upload-file" accept=".csv" required>
+                                    </div>
+                                    <div class="margin-top-20">
+                                        <button type="submit" class="btn btn-primary import-submit-btn">Upload Capital Entries</button>
+                                    </div>
+                                </form>
                             </div>
-
-                            <!-- Dynamic Parameters Fields Form -->
-                            <form id="patch-params-form" class="maintenance-params-form">
-                                <div id="patch-params-fields"></div>
-                            </form>
-                            
-                            <!-- Execute Button -->
-                            <button id="btn-patch-execute" class="btn btn-primary" style="margin-top: 8px; width: 100%;" disabled>Execute Patch</button>
+                            <div class="import-info-pane">
+                                <h4 class="info-pane-title">
+                                    <span>Capital CSV Specs</span>
+                                    <a href="{{ BASE_PATH }}/static/templates/capital_template.csv" download="capital_template.csv" class="fd-reference-link">⬇️ Download Template</a>
+                                </h4>
+                                <div class="info-pane-section">
+                                    <h5>Required CSV Format</h5>
+                                    <table class="schema-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Column</th>
+                                                <th>Type</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Broker</strong></td>
+                                                <td>String</td>
+                                                <td>Broker name (e.g. IBKR, MOOMOO).</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Date</strong></td>
+                                                <td>Date</td>
+                                                <td>Date in YYYY-MM-DD or YYYY-MMM DD format.</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Remarks</strong></td>
+                                                <td>String</td>
+                                                <td>Transaction description or remarks.</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Amount</strong></td>
+                                                <td>Decimal</td>
+                                                <td>Net capital injection amount.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="info-pane-section">
+                                    <h5>Key Rules & Assumptions</h5>
+                                    <ul class="info-pane-list">
+                                        <li><strong>Four Columns Required</strong>: The uploaded CSV must contain exactly 4 columns: <code>Broker</code>, <code>Date</code>, <code>Remarks</code>, and <code>Amount</code>.</li>
+                                        <li><strong>Full Overwrite</strong>: Seeding a new capital CSV will <strong>fully overwrite and delete</strong> all existing capital entries.</li>
+                                        <li><strong>Case Insensitive</strong>: Broker names are stored as uppercase (e.g. <code>IBKR</code>, <code>MOOMOO</code>).</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Right inside card: Full Activity Console Logs -->
-                        <div>
-                            <div class="maintenance-console-header">
-                                <span>Activity & Execution Logs:</span>
-                                <button id="btn-clear-logs" class="maintenance-console-clear-btn" onclick="document.getElementById('patch-console-pre').textContent = 'Console cleared.'">Clear logs</button>
+                    <!-- TAB: IBKR DIVIDENDS -->
+                    <div id="import-tab-ibkr-content" class="tab-wrapper-content">
+                        <div class="import-split-grid">
+                            <div class="import-form-pane">
+                                <div class="table-header-row import-title-margin">
+                                    <div class="table-title">Import IBKR Dividends (XML)</div>
+                                </div>
+                                <form id="ibkr-import-form">
+                                    <div class="form-group">
+                                        <label for="ibkr-import-file">Dividends XML File (dividend-ytd.xml)</label>
+                                        <input type="file" id="ibkr-import-file" accept=".xml" required>
+                                    </div>
+                                    <div class="form-row ibkr-date-row">
+                                        <div class="form-group ibkr-date-group">
+                                            <label for="ibkr-import-start-date">Start Date</label>
+                                            <input type="date" id="ibkr-import-start-date" required>
+                                        </div>
+                                        <div class="form-group ibkr-date-group">
+                                            <label for="ibkr-import-end-date">End Date</label>
+                                            <input type="date" id="ibkr-import-end-date" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ibkr-import-portfolio">Fallback Target Portfolio</label>
+                                        <select id="ibkr-import-portfolio" required></select>
+                                    </div>
+                                    <div class="margin-top-20">
+                                        <button type="submit" class="btn btn-primary import-submit-btn">Upload & Run Import</button>
+                                    </div>
+                                </form>
                             </div>
-                            <pre id="patch-console-pre" class="maintenance-console-pre">Console ready. Actions across Maintenance will output activity logs here.</pre>
+                            <div class="import-info-pane">
+                                <h4 class="info-pane-title">IBKR XML Specs</h4>
+                                <div class="info-pane-section">
+                                    <h5>Export Documentation</h5>
+                                    <ul class="info-pane-list">
+                                        <li>Refer to the <a href="https://github.com/SkyStrike/portfolio-manager/blob/main/docs/ibkr_dividend_import.md" target="_blank" class="fd-reference-link">IBKR Dividend Import Guide</a> for details on the columns expected in the XML exported via IBKR Flex Queries.</li>
+                                    </ul>
+                                </div>
+                                <div class="info-pane-section">
+                                    <h5>Expected XML Structure</h5>
+                                    <ul class="info-pane-list">
+                                        <li>Generated as a <strong>Flex Query Activity Report</strong> from the Interactive Brokers Account Management portal.</li>
+                                        <li>The parser extracts <code>&lt;CashTransaction&gt;</code> tags where <code>type</code> is <code>Dividends</code> or <code>Payment In Lieu Of Dividends</code>.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: SNOWBALL CSV -->
+                    <div id="import-tab-snowball-content" class="tab-wrapper-content" style="display: none;">
+                        <div class="import-split-grid">
+                            <div class="import-form-pane">
+                                <div class="table-header-row import-title-margin">
+                                    <div class="table-title">Snowball Analytics Import Wizard</div>
+                                </div>
+                                <form id="import-form">
+                                    <div class="form-group">
+                                        <label for="import-portfolio-select">Target Portfolio</label>
+                                        <select id="import-portfolio-select">
+                                            <option value="">-- Select or Type Portfolio Name below --</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="import-new-portfolio-name">Create Portfolio Name (if not in dropdown)</label>
+                                        <input type="text" id="import-new-portfolio-name" placeholder="e.g. Income Factory">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="import-holdings-file">Holdings CSV File (e.g. snowball-holdings.csv)</label>
+                                        <input type="file" id="import-holdings-file" accept=".csv" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="import-transactions-file">Transactions CSV File (e.g. snowball-transactions.csv)</label>
+                                        <input type="file" id="import-transactions-file" accept=".csv" required>
+                                    </div>
+                                    <div class="margin-top-20">
+                                        <button type="submit" class="btn btn-primary import-submit-btn">Run Import Wizard</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="import-info-pane">
+                                <h4 class="info-pane-title">
+                                    <span>Snowball CSV Specs</span>
+                                    <span style="display: flex; gap: 8px;">
+                                        <a href="{{ BASE_PATH }}/static/templates/snowball_holdings_template.csv" download="snowball_holdings_template.csv" class="fd-reference-link" style="font-size: 0.72rem;">⬇️ Holdings</a>
+                                        <a href="{{ BASE_PATH }}/static/templates/snowball_transactions_template.csv" download="snowball_transactions_template.csv" class="fd-reference-link" style="font-size: 0.72rem;">⬇️ Tx</a>
+                                    </span>
+                                </h4>
+                                <div class="info-pane-section">
+                                    <h5>Export Documentation</h5>
+                                    <ul class="info-pane-list">
+                                        <li>Generate files directly from the website following the <a href="https://github.com/SkyStrike/portfolio-manager/blob/main/docs/data_migration.md" target="_blank" class="fd-reference-link">Data Migration Guide</a>.</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

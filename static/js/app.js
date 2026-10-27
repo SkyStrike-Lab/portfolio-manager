@@ -170,9 +170,12 @@ async function initApp() {
         if (tabParam === "settings") {
             initialNav = "nav-settings";
             initialSec = "section-settings";
-        } else if (tabParam === "import" || tabParam === "imports") {
-            initialNav = "nav-import";
-            initialSec = "section-import";
+        } else if (tabParam === "operations" || tabParam === "operation" || tabParam === "sync") {
+            initialNav = "nav-operations";
+            initialSec = "section-operations";
+        } else if (tabParam === "import" || tabParam === "imports" || tabParam === "maintenance" || tabParam === "admin") {
+            initialNav = "nav-maintenance";
+            initialSec = "section-maintenance";
         } else if (tabParam === "tickers") {
             initialNav = "nav-tickers";
             initialSec = "section-tickers";
@@ -185,9 +188,6 @@ async function initApp() {
         } else if (tabParam === "dailycash") {
             initialNav = "nav-dailycash";
             initialSec = "section-dailycash";
-        } else if (tabParam === "maintenance") {
-            initialNav = "nav-maintenance";
-            initialSec = "section-maintenance";
         }
     }
     
@@ -244,7 +244,7 @@ const navs = [
     { navId: "nav-tickers", secId: "section-tickers", callback: loadTickers },
     { navId: "nav-capital", secId: "section-capital", callback: loadCapitalEntries },
     { navId: "nav-dailycash", secId: "section-dailycash", callback: loadDailyCashHistory },
-    { navId: "nav-import", secId: "section-import", callback: loadImportWizard },
+    { navId: "nav-operations", secId: "section-operations", callback: loadOperationsTab },
     { navId: "nav-settings", secId: "section-settings", callback: loadSettingsEditor },
     { navId: "nav-maintenance", secId: "section-maintenance", callback: loadMaintenanceTab }
 ];
@@ -3852,8 +3852,10 @@ function setupTransactionModalCalculation() {
 
             executeBtn.disabled = true;
             executeBtn.textContent = "Executing...";
-            const consolePre = document.getElementById("patch-console-pre");
-            consolePre.textContent = "Executing patch script, please wait...\n";
+            const consolePre = document.getElementById("admin-patch-console-pre") || document.getElementById("patch-console-pre");
+            if (consolePre) {
+                consolePre.textContent = "Executing patch script, please wait...\n";
+            }
 
             try {
                 const res = await fetch("/api/patches/execute", {
@@ -3864,7 +3866,9 @@ function setupTransactionModalCalculation() {
                 
                 const data = await res.json();
                 if (res.ok) {
-                    consolePre.textContent = data.logs || "Execution completed with no logs.";
+                    if (consolePre) {
+                        consolePre.textContent = data.logs || "Execution completed with no logs.";
+                    }
                     if (data.success) {
                         showToast("Patch executed successfully!");
                         await Promise.all([loadPortfolios(), loadTickersList()]);
@@ -3873,11 +3877,15 @@ function setupTransactionModalCalculation() {
                         showToast("Patch execution failed. See logs.", "error");
                     }
                 } else {
-                    consolePre.textContent = `Error: ${data.detail || "Server error occurred."}`;
+                    if (consolePre) {
+                        consolePre.textContent = `Error: ${data.detail || "Server error occurred."}`;
+                    }
                     showToast("Execution request failed.", "error");
                 }
             } catch (e) {
-                consolePre.textContent = `Network Error: ${e.message}`;
+                if (consolePre) {
+                    consolePre.textContent = `Network Error: ${e.message}`;
+                }
                 showToast("Failed to connect to executor.", "error");
             } finally {
                 executeBtn.disabled = false;
@@ -3889,8 +3897,12 @@ function setupTransactionModalCalculation() {
 
 let cachedPatches = [];
 
+async function loadOperationsTab() {
+    await checkSystemIbStatus();
+}
+
 async function loadMaintenanceTab() {
-    await Promise.all([loadDatabaseBackups(), loadPatchesList(), checkSystemIbStatus()]);
+    await Promise.all([loadDatabaseBackups(), loadPatchesList(), loadImportWizard()]);
 }
 
 let systemIbStatusInterval = null;
