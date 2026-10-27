@@ -568,22 +568,31 @@
                             </div>
                         </div>
 
-                        <!-- Force Price Refresh Card -->
+                        <!-- Administrative Price Refresh & Cache Rebuild Side-by-Side -->
                         <div class="form-group maintenance-group-border">
-                            <label class="maintenance-field-label">Administrative Price Refresh</label>
-                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                                Bypasses all market session open/closed rules and cache timestamps to force an immediate yfinance query for <strong>all active holdings</strong>.
-                            </p>
-                            <button id="btn-admin-force-price-refresh" class="btn maintenance-btn-refresh-amber" onclick="handleAdminForcePriceRefresh()">⚡ Force Update All Prices</button>
-                        </div>
+                            <div class="maintenance-2col-row">
+                                <!-- Administrative Price Refresh -->
+                                <div class="maintenance-subcard">
+                                    <div>
+                                        <label class="maintenance-field-label">Administrative Price Refresh</label>
+                                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px; line-height: 1.4;">
+                                            Bypasses session rules and timestamps to force an immediate yfinance query for <strong>all active holdings</strong>.
+                                        </p>
+                                    </div>
+                                    <button id="btn-admin-force-price-refresh" class="btn maintenance-btn-refresh-amber" style="width: 100%; text-align: center;" onclick="handleAdminForcePriceRefresh()">⚡ Force Update Prices</button>
+                                </div>
 
-                        <!-- Rebuild Dashboard Cache -->
-                        <div class="form-group maintenance-group-border">
-                            <label class="maintenance-field-label">Rebuild Dashboard Cache</label>
-                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                                Re-calculates metrics, position weights, cash summaries, and ApexCharts data, re-caching in-memory JSON views.
-                            </p>
-                            <button id="btn-admin-rebuild-cache" class="btn maintenance-btn-cache-blue" onclick="handleAdminRebuildCache()">🔄 Rebuild Dashboard Cache</button>
+                                <!-- Rebuild Dashboard Cache -->
+                                <div class="maintenance-subcard">
+                                    <div>
+                                        <label class="maintenance-field-label">Rebuild Dashboard Cache</label>
+                                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px; line-height: 1.4;">
+                                            Re-calculates metrics, position weights, cash summaries, and ApexCharts, re-caching in-memory views.
+                                        </p>
+                                    </div>
+                                    <button id="btn-admin-rebuild-cache" class="btn maintenance-btn-cache-blue" style="width: 100%; text-align: center;" onclick="handleAdminRebuildCache()">🔄 Rebuild Cache</button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- IBKR Systemd Action Triggers -->
@@ -661,7 +670,7 @@
                         <span>🛠️ System Patches & Unified Maintenance Console</span>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 24px; align-items: start;">
+                    <div class="maintenance-bottom-grid">
                         <!-- Left inside card: Patch selector & execution -->
                         <div>
                             <div class="form-group">

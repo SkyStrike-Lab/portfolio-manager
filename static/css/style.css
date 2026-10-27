@@ -661,9 +661,14 @@ tr.child-row td:first-child {
 }
 .maintenance-top-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+    grid-template-columns: 1.65fr 1fr;
     gap: 20px;
     align-items: start;
+}
+@media (max-width: 1024px) {
+    .maintenance-top-grid {
+        grid-template-columns: 1fr;
+    }
 }
 .maintenance-card {
     padding: 1.5rem;
@@ -684,6 +689,26 @@ tr.child-row td:first-child {
     border-bottom: none;
     margin-bottom: 0;
     padding-bottom: 0;
+}
+.maintenance-2col-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: stretch;
+}
+@media (max-width: 640px) {
+    .maintenance-2col-row {
+        grid-template-columns: 1fr;
+    }
+}
+.maintenance-subcard {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 .maintenance-backup-input-group {
     display: flex;
@@ -755,6 +780,17 @@ tr.child-row td:first-child {
     border-top: 1px solid var(--card-border);
     padding-top: 1rem;
 }
+.maintenance-bottom-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: stretch;
+}
+@media (max-width: 1024px) {
+    .maintenance-bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
 .maintenance-console-header {
     font-weight: 600;
     font-size: 0.9rem;
@@ -778,10 +814,12 @@ tr.child-row td:first-child {
     color: #39ff14;
     font-family: monospace;
     font-size: 0.85rem;
-    max-height: 280px;
+    height: 420px;
+    max-height: 520px;
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-all;
+    box-sizing: border-box;
 }
 .maintenance-file-upload-box {
     display: flex;
