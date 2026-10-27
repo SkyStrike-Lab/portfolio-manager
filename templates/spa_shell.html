@@ -58,6 +58,7 @@
     </style>
     <script>
         window.APP_CONFIG = {
+            options_tracker_url: {{ OPTIONS_TRACKER_URL | default("") | tojson | safe }},
             ui_font_size: {{ UI_FONT_SIZE | tojson | safe }},
             ui_mobile_font_size: {{ UI_MOBILE_FONT_SIZE | tojson | safe }},
             color_invested: {{ COLOR_INVESTED | tojson | safe }},

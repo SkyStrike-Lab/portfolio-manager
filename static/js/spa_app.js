@@ -93,6 +93,17 @@ const { createApp } = Vue;
             }
         },
         computed: {
+            optionsTrackerBaseUrl() {
+                let raw = this.metadata?.config?.external_services?.options_tracker_url 
+                       || window.APP_CONFIG?.options_tracker_url 
+                       || '/options-tracker';
+                raw = (raw || '').trim();
+                if (!raw) return '/options-tracker';
+                if (raw.includes('/api/positions')) {
+                    raw = raw.replace('/api/positions', '');
+                }
+                return raw.replace(/\/+$/, '');
+            },
             currentTagMetrics() {
                 if (!this.tagExposureData) {
                     return {
@@ -936,6 +947,10 @@ const { createApp } = Vue;
             }
         },
         methods: {
+            getOptionsDetailsUrl(groupId) {
+                const base = this.optionsTrackerBaseUrl;
+                return `${base}/details?group_id=${encodeURIComponent(groupId)}`;
+            },
             toggleTableGroup(key) {
                 this.collapsedTableGroups = {
                     ...this.collapsedTableGroups,

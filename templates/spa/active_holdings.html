@@ -545,7 +545,7 @@
                             <span class="col-strategy">
                                 <div v-for="leg in group.legs" :key="leg.contract_name">
                                     <span :class="leg.initial_type === 'STO' ? 'sto' : 'bto'">[{{ leg.initial_type }}]</span>
-                                    <a :href="'/options-tracker/details?group_id=' + group.group_id" target="_blank" class="accent-link" v-text="leg.contract_name"></a>
+                                    <a :href="getOptionsDetailsUrl(group.group_id)" target="_blank" class="accent-link" v-text="leg.contract_name"></a>
                                     <span class="col-leg-dates">[{{ leg.date_opened.substring(0, 10) }}]</span>
                                 </div>
                             </span>
@@ -599,7 +599,7 @@
                                     <span class="flex-3 flex-col-gap-4">
                                         <div v-for="leg in group.legs" :key="leg.contract_name">
                                             <span :class="leg.action.toLowerCase()">[{{ leg.action }}]</span>
-                                            <a :href="'/options-tracker/details?group_id=' + group.group_id" target="_blank" class="accent-link" v-text="leg.contract_name"></a>
+                                            <a :href="getOptionsDetailsUrl(group.group_id)" target="_blank" class="accent-link" v-text="leg.contract_name"></a>
                                             <span class="col-leg-dates">({{ leg.date_opened.substring(0, 10) }} to {{ group.date_closed }})</span>
                                         </div>
                                     </span>

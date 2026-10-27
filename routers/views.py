@@ -89,6 +89,7 @@ def get_spa_dashboard():
             options_tracker_main_url = options_tracker_url.replace("/api/positions", "")
         else:
             options_tracker_main_url = options_tracker_url
+        options_tracker_main_url = options_tracker_main_url.rstrip("/")
         backtester_url = config.get("external_services", {}).get("backtester_url", "")
         transaction_ocr_url = config.get("external_services", {}).get("transaction_ocr_url", "")
         
@@ -154,6 +155,7 @@ def get_trades():
             options_tracker_main_url = options_tracker_url.replace("/api/positions", "")
         else:
             options_tracker_main_url = options_tracker_url
+        options_tracker_main_url = options_tracker_main_url.rstrip("/")
         backtester_url = config.get("external_services", {}).get("backtester_url", "")
         transaction_ocr_url = config.get("external_services", {}).get("transaction_ocr_url", "")
         metrics_run_hour = config.get("cron", {}).get("metrics_run_hour", 6)
@@ -185,6 +187,7 @@ def get_control_center():
             options_tracker_main_url = options_tracker_url.replace("/api/positions", "")
         else:
             options_tracker_main_url = options_tracker_url
+        options_tracker_main_url = options_tracker_main_url.rstrip("/")
         backtester_url = config.get("external_services", {}).get("backtester_url", "")
         transaction_ocr_url = config.get("external_services", {}).get("transaction_ocr_url", "")
         metrics_run_hour = config.get("cron", {}).get("metrics_run_hour", 6)
