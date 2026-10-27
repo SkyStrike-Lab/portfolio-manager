@@ -541,150 +541,159 @@
 
         <!-- SECTION: MAINTENANCE -->
         <section id="section-maintenance" style="display: none;">
-            <div class="maintenance-grid">
+            <div class="maintenance-layout">
                 
-                <!-- LEFT COLUMN: BACKUP & RESTORE -->
+                <!-- TOP 2-COLUMN GRID: DATA SYNC (FREQUENT) VS DATABASE & BACKUP (HIGH-RISK) -->
+                <div class="maintenance-top-grid">
+
+                    <!-- COLUMN 1: MARKET DATA & AUTOMATION SYNC (FREQUENT) -->
+                    <div class="table-card maintenance-card">
+                        <div class="table-header-row maintenance-card-title">
+                            <span>📈 Market Data & Automation Sync</span>
+                        </div>
+
+                        <!-- Import Historical Price Overrides -->
+                        <div class="form-group maintenance-group-border">
+                            <label class="maintenance-field-label">Bulk Import Price History Overrides</label>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
+                                Uploads OHLC history (e.g. from <code>tmp/history.json</code>). Entries with matching close prices are skipped. New or differing dates are imported as manual overrides (<code>is_manual = 1</code>).
+                            </p>
+                            <div class="maintenance-file-upload-box">
+                                <input type="file" id="price-history-upload-file" accept=".json" class="modal-exchange-select" style="padding: 6px;" />
+                                <input type="text" id="price-history-upload-path" placeholder="Or server path (default: tmp/history.json)" class="modal-exchange-select maintenance-backup-input" />
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                                <button id="btn-admin-import-history" class="btn maintenance-btn-history-purple" onclick="handleAdminImportPriceHistory(false)">📥 Import Overrides</button>
+                                <button id="btn-admin-preview-history" class="btn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-secondary); padding: 8px 12px; border-radius: 6px; cursor: pointer;" onclick="handleAdminImportPriceHistory(true)">🔍 Dry Run Preview</button>
+                            </div>
+                        </div>
+
+                        <!-- Force Price Refresh Card -->
+                        <div class="form-group maintenance-group-border">
+                            <label class="maintenance-field-label">Administrative Price Refresh</label>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
+                                Bypasses all market session open/closed rules and cache timestamps to force an immediate yfinance query for <strong>all active holdings</strong>.
+                            </p>
+                            <button id="btn-admin-force-price-refresh" class="btn maintenance-btn-refresh-amber" onclick="handleAdminForcePriceRefresh()">⚡ Force Update All Prices</button>
+                        </div>
+
+                        <!-- Rebuild Dashboard Cache -->
+                        <div class="form-group maintenance-group-border">
+                            <label class="maintenance-field-label">Rebuild Dashboard Cache</label>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
+                                Re-calculates metrics, position weights, cash summaries, and ApexCharts data, re-caching in-memory JSON views.
+                            </p>
+                            <button id="btn-admin-rebuild-cache" class="btn maintenance-btn-cache-blue" onclick="handleAdminRebuildCache()">🔄 Rebuild Dashboard Cache</button>
+                        </div>
+
+                        <!-- IBKR Systemd Action Triggers -->
+                        <div class="form-group maintenance-group-border">
+                            <label class="maintenance-field-label">🤖 IBKR Systemd Action Triggers</label>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
+                                Generates JSON trigger payload files in <code>/app/triggers/ib/</code> for external systemd watcher services.
+                            </p>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button id="btn-ib-download-data" class="btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('download_data')">🔄 Trigger IBKR Data Download</button>
+                                <button id="btn-ib-flex-dividend" class="btn" style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.4); color: #a78bfa; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('flex_dividend')">💰 Trigger Dividend Flex Report</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMN 2: DATABASE BACKUP & RESTORE (HIGH-RISK AREA) -->
+                    <div class="table-card maintenance-card">
+                        <div class="table-header-row maintenance-card-title">
+                            <span>💾 Database Backup & Restore</span>
+                        </div>
+
+                        <!-- WARNING BANNER -->
+                        <div class="maintenance-warning-card" style="margin: 0 0 1.25rem 0;">
+                            <span class="maintenance-warning-icon">⚠️</span>
+                            <div>
+                                <div class="maintenance-warning-title">High-Risk Operations Area</div>
+                                Restoring a database will <strong>overwrite your current data permanently</strong>. Running database patches can modify schema tables and records. Creating a fresh database backup is <strong>highly recommended</strong> before proceeding with any action.
+                            </div>
+                        </div>
+                        
+                        <!-- Backup DB Form -->
+                        <div class="form-group maintenance-group-border">
+                            <label for="db-backup-name" class="maintenance-field-label">Create New Database Backup</label>
+                            <div class="maintenance-backup-input-group">
+                                <input type="text" id="db-backup-name" placeholder="e.g. backup_today.db" class="modal-exchange-select maintenance-backup-input" />
+                                <button id="btn-db-backup" class="btn btn-primary">Create Backup</button>
+                            </div>
+                            <span class="maintenance-sub-label">The backup name must end with '.db' and not match the active database filename.</span>
+                        </div>
+
+                        <!-- List, Download & Delete Backups -->
+                        <div class="form-group maintenance-group-border">
+                            <label class="maintenance-field-label">Manage Database Backups</label>
+                            <div class="maintenance-list-container" id="db-backups-list">
+                                <!-- Populated via Javascript -->
+                                <div class="maintenance-list-empty">No backups found.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Restore DB Form -->
+                        <div class="form-group">
+                            <label for="db-restore-select" class="maintenance-field-label">Restore Database</label>
+                            <div class="maintenance-restore-row">
+                                <div>
+                                    <span class="maintenance-field-label">Select Backup File:</span>
+                                    <select id="db-restore-select" class="modal-exchange-select"></select>
+                                </div>
+                                <div>
+                                    <span class="maintenance-field-label">Restore Target (Active Database):</span>
+                                    <select id="db-restore-target" class="modal-exchange-select maintenance-restore-target" disabled>
+                                        <option value="portfolio.db">portfolio.db (Active Database)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button id="btn-db-restore" class="btn btn-danger">Restore Selected Backup</button>
+                            <span class="maintenance-restore-warning">🚨 WARNING: Restoring will overwrite the current database file. This takes effect immediately.</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FULL-WIDTH BOTTOM CARD: SYSTEM PATCHES & UNIFIED CONSOLE LOG -->
                 <div class="table-card maintenance-card">
                     <div class="table-header-row maintenance-card-title">
-                        <span>💾 Database Backup & Restore</span>
+                        <span>🛠️ System Patches & Unified Maintenance Console</span>
                     </div>
 
-                    <!-- WARNING BANNER -->
-                    <div class="maintenance-warning-card">
-                        <span class="maintenance-warning-icon">⚠️</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 24px; align-items: start;">
+                        <!-- Left inside card: Patch selector & execution -->
                         <div>
-                            <div class="maintenance-warning-title">High-Risk Operations Area</div>
-                            Restoring a database will <strong>overwrite your current data permanently</strong>. Running database patches can modify schema tables and records. Creating a fresh database backup is <strong>highly recommended</strong> before proceeding with any action.
-                        </div>
-                    </div>
-                    
-                    <!-- Backup DB Form -->
-                    <div class="form-group maintenance-group-border">
-                        <label for="db-backup-name" class="maintenance-field-label">Create New Database Backup</label>
-                        <div class="maintenance-backup-input-group">
-                            <input type="text" id="db-backup-name" placeholder="e.g. backup_today.db" class="modal-exchange-select maintenance-backup-input" />
-                            <button id="btn-db-backup" class="btn btn-primary">Create Backup</button>
-                        </div>
-                        <span class="maintenance-sub-label">The backup name must end with '.db' and not match the active database filename.</span>
-                    </div>
-
-                    
-
-                    <!-- List, Download & Delete Backups -->
-                    <div class="form-group maintenance-group-border">
-                        <label class="maintenance-field-label">Manage Database Backups</label>
-                        <div class="maintenance-list-container" id="db-backups-list">
-                            <!-- Populated via Javascript -->
-                            <div class="maintenance-list-empty">No backups found.</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Restore DB Form -->
-                    <div class="form-group">
-                        <label for="db-restore-select" class="maintenance-field-label">Restore Database</label>
-                        <div class="maintenance-restore-row">
-                            <div>
-                                <span class="maintenance-field-label">Select Backup File:</span>
-                                <select id="db-restore-select" class="modal-exchange-select"></select>
-                            </div>
-                            <div>
-                                <span class="maintenance-field-label">Restore Target (Active Database):</span>
-                                <select id="db-restore-target" class="modal-exchange-select maintenance-restore-target" disabled>
-                                    <option value="portfolio.db">portfolio.db (Active Database)</option>
+                            <div class="form-group">
+                                <label for="patch-select" class="maintenance-field-label">Select Maintenance Patch</label>
+                                <select id="patch-select" class="modal-exchange-select">
+                                    <option value="">-- Select a patch to load --</option>
                                 </select>
                             </div>
+
+                            <!-- Patch Description Card -->
+                            <div id="patch-desc-card" class="info-card maintenance-desc-card">
+                                <div id="patch-desc-text" class="maintenance-desc-text"></div>
+                            </div>
+
+                            <!-- Dynamic Parameters Fields Form -->
+                            <form id="patch-params-form" class="maintenance-params-form">
+                                <div id="patch-params-fields"></div>
+                            </form>
+                            
+                            <!-- Execute Button -->
+                            <button id="btn-patch-execute" class="btn btn-primary" style="margin-top: 8px; width: 100%;" disabled>Execute Patch</button>
                         </div>
-                        <button id="btn-db-restore" class="btn btn-danger">Restore Selected Backup</button>
-                        <span class="maintenance-restore-warning">🚨 WARNING: Restoring will overwrite the current database file. This takes effect immediately.</span>
-                    </div>
-                </div>
 
-                <!-- MIDDLE COLUMN: SYSTEM OPERATIONS & REFRESH -->
-                <div class="table-card maintenance-card">
-                    <div class="table-header-row maintenance-card-title">
-                        <span>⚡ System & Data Operations</span>
-                    </div>
-
-                    <!-- Force Price Refresh Card -->
-                    <div class="form-group maintenance-group-border">
-                        <label class="maintenance-field-label">Administrative Price Refresh</label>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                            Bypasses all market session open/closed rules and cache timestamps to force an immediate yfinance query for <strong>all active holdings</strong>.
-                        </p>
-                        <button id="btn-admin-force-price-refresh" class="btn" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-weight: 600; cursor: pointer; padding: 8px 16px; border-radius: 6px;" onclick="handleAdminForcePriceRefresh()">⚡ Force Update All Prices</button>
-                    </div>
-
-                    <!-- Rebuild Dashboard Cache -->
-                    <div class="form-group maintenance-group-border">
-                        <label class="maintenance-field-label">Rebuild Dashboard Cache</label>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                            Re-calculates metrics, position weights, cash summaries, and ApexCharts data, re-caching in-memory JSON views.
-                        </p>
-                        <button id="btn-admin-rebuild-cache" class="btn maintenance-btn-cache-blue" onclick="handleAdminRebuildCache()">🔄 Rebuild Dashboard Cache</button>
-                    </div>
-
-                    <!-- Import Historical Price Overrides -->
-                    <div class="form-group maintenance-group-border">
-                        <label class="maintenance-field-label">📈 Bulk Import Price History Overrides</label>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                            Uploads OHLC history (e.g. from <code>tmp/history.json</code>). Entries with matching close prices are skipped. New or differing dates are imported as manual overrides (<code>is_manual = 1</code>).
-                        </p>
-                        <div class="maintenance-file-upload-box">
-                            <input type="file" id="price-history-upload-file" accept=".json" class="modal-exchange-select" style="padding: 6px;" />
-                            <input type="text" id="price-history-upload-path" placeholder="Or server path (default: tmp/history.json)" class="modal-exchange-select maintenance-backup-input" />
-                        </div>
-                        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
-                            <button id="btn-admin-import-history" class="btn maintenance-btn-history-purple" onclick="handleAdminImportPriceHistory(false)">📥 Import Overrides</button>
-                            <button id="btn-admin-preview-history" class="btn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: var(--text-secondary); padding: 8px 12px; border-radius: 6px; cursor: pointer;" onclick="handleAdminImportPriceHistory(true)">🔍 Dry Run Preview</button>
+                        <!-- Right inside card: Full Activity Console Logs -->
+                        <div>
+                            <div class="maintenance-console-header">
+                                <span>Activity & Execution Logs:</span>
+                                <button id="btn-clear-logs" class="maintenance-console-clear-btn" onclick="document.getElementById('patch-console-pre').textContent = 'Console cleared.'">Clear logs</button>
+                            </div>
+                            <pre id="patch-console-pre" class="maintenance-console-pre">Console ready. Actions across Maintenance will output activity logs here.</pre>
                         </div>
                     </div>
-
-                    <!-- IBKR Systemd Action Triggers -->
-                    <div class="form-group maintenance-group-border" style="margin-top: 20px;">
-                        <label class="maintenance-field-label">🤖 IBKR Systemd Action Triggers</label>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                            Generates JSON trigger payload files in <code>/app/triggers/ib/</code> for external systemd watcher services.
-                        </p>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button id="btn-ib-download-data" class="btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('download_data')">🔄 Trigger IBKR Data Download</button>
-                            <button id="btn-ib-flex-dividend" class="btn" style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.4); color: #a78bfa; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('flex_dividend')">💰 Trigger Dividend Flex Report</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RIGHT COLUMN: PATCHING ENGINE -->
-                <div class="table-card maintenance-card">
-                    <div class="table-header-row maintenance-card-title">
-                        <span>🛠️ Run System Patches</span>
-                    </div>
-                    
-                    <!-- Select Patch -->
-                    <div class="form-group">
-                        <label for="patch-select" class="maintenance-field-label">Select Maintenance Patch</label>
-                        <select id="patch-select" class="modal-exchange-select">
-                            <option value="">-- Select a patch to load --</option>
-                        </select>
-                    </div>
-
-                    <!-- Patch Description Card -->
-                    <div id="patch-desc-card" class="info-card maintenance-desc-card">
-                        <div id="patch-desc-text" class="maintenance-desc-text"></div>
-                    </div>
-
-                    <!-- Dynamic Parameters Fields Form -->
-                    <form id="patch-params-form" class="maintenance-params-form">
-                        <div id="patch-params-fields"></div>
-                    </form>
-                    
-                    <!-- Execute Button -->
-                    <button id="btn-patch-execute" class="btn btn-primary" disabled>Execute Patch</button>
-
-                    <!-- Console Logs Output Screen -->
-                    <div class="maintenance-console-header">
-                        <span>Console Output Logs:</span>
-                        <button id="btn-clear-logs" class="maintenance-console-clear-btn" onclick="document.getElementById('patch-console-pre').textContent = 'Console cleared.'">Clear logs</button>
-                    </div>
-                    <pre id="patch-console-pre" class="maintenance-console-pre">Console ready. Select a patch to begin.</pre>
                 </div>
 
             </div>

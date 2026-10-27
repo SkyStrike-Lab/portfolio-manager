@@ -653,26 +653,37 @@ tr.child-row td:first-child {
 }
 
 /* Maintenance & Patching panel layout */
-.maintenance-grid {
+.maintenance-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 2rem;
+}
+.maintenance-top-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
     gap: 20px;
     align-items: start;
-    margin-bottom: 2rem;
 }
 .maintenance-card {
     padding: 1.5rem;
 }
 .maintenance-card-title {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 600;
 }
 .maintenance-group-border {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     border-bottom: 1px solid var(--card-border);
-    padding-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+}
+.maintenance-group-border:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 .maintenance-backup-input-group {
     display: flex;
@@ -689,7 +700,7 @@ tr.child-row td:first-child {
     display: block;
 }
 .maintenance-list-container {
-    max-height: 200px;
+    max-height: 180px;
     overflow-y: auto;
     border: 1px solid var(--card-border);
     border-radius: 4px;
@@ -727,7 +738,7 @@ tr.child-row td:first-child {
 }
 .maintenance-desc-card {
     display: none;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--card-border);
     border-radius: 4px;
@@ -740,7 +751,7 @@ tr.child-row td:first-child {
 }
 .maintenance-params-form {
     display: none;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     border-top: 1px solid var(--card-border);
     padding-top: 1rem;
 }
@@ -767,7 +778,7 @@ tr.child-row td:first-child {
     color: #39ff14;
     font-family: monospace;
     font-size: 0.85rem;
-    max-height: 250px;
+    max-height: 280px;
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-all;

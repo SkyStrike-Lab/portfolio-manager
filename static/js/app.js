@@ -3910,17 +3910,19 @@ async function checkSystemIbStatus() {
             if (status.download_data_error && status.download_data_error !== lastKnownErrors.download_data) {
                 lastKnownErrors.download_data = status.download_data_error;
                 showToast(status.download_data_error, "error");
-                const consoleOutput = document.getElementById("patch-console-log");
+                const consoleOutput = document.getElementById("patch-console-pre");
                 if (consoleOutput) {
-                    consoleOutput.innerText += `\n[${new Date().toLocaleTimeString()}] ERROR: ${status.download_data_error}`;
+                    consoleOutput.textContent += `\n[${new Date().toLocaleTimeString()}] ERROR: ${status.download_data_error}`;
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
                 }
             }
             if (status.flex_dividend_error && status.flex_dividend_error !== lastKnownErrors.flex_dividend) {
                 lastKnownErrors.flex_dividend = status.flex_dividend_error;
                 showToast(status.flex_dividend_error, "error");
-                const consoleOutput = document.getElementById("patch-console-log");
+                const consoleOutput = document.getElementById("patch-console-pre");
                 if (consoleOutput) {
-                    consoleOutput.innerText += `\n[${new Date().toLocaleTimeString()}] ERROR: ${status.flex_dividend_error}`;
+                    consoleOutput.textContent += `\n[${new Date().toLocaleTimeString()}] ERROR: ${status.flex_dividend_error}`;
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
                 }
             }
 
@@ -4102,9 +4104,10 @@ window.triggerIbSystemdAction = async function(action) {
         const data = await res.json();
         if (res.ok) {
             showToast(`Triggered ${actionLabel}! (${action}.json created in /app/triggers/ib/)`);
-            const consoleOutput = document.getElementById("patch-console-log");
+            const consoleOutput = document.getElementById("patch-console-pre");
             if (consoleOutput) {
-                consoleOutput.innerText += `\n[${new Date().toLocaleTimeString()}] SUCCESS: ${data.message}`;
+                consoleOutput.textContent += `\n[${new Date().toLocaleTimeString()}] SUCCESS: ${data.message}`;
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
             }
         } else {
             showToast(data.detail || `Failed to trigger ${actionLabel}`, "error");
