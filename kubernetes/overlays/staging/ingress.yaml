@@ -3,9 +3,13 @@ kind: Ingress
 metadata:
   name: portfolio-manager-ingress
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - portfolio-staging.rath.home
   rules:
     - host: portfolio-staging.rath.home
       http:
