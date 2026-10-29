@@ -214,6 +214,20 @@
                             <input type="url" id="settings-transaction-ocr-url" placeholder="http://yui.home/transaction-ocr/">
                         </div>
                         <div class="form-group">
+                            <label for="settings-ib-download-webhook-url">IBKR data download webhook URL</label>
+                            <input type="url" id="settings-ib-download-webhook-url" placeholder="http://.../webhook/ib-download">
+                            <small class="form-help settings-help-text">
+                                Endpoint invoked when clicking 'Trigger IBKR Data Download'. Leave blank to disable the trigger button.
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-ib-flex-dividend-webhook-url">IBKR dividend flex report webhook URL</label>
+                            <input type="url" id="settings-ib-flex-dividend-webhook-url" placeholder="http://.../webhook/ib-flex-dividend">
+                            <small class="form-help settings-help-text">
+                                Endpoint invoked when clicking 'Trigger Dividend Flex Report'. Leave blank to disable the trigger button.
+                            </small>
+                        </div>
+                        <div class="form-group">
                             <label for="settings-metrics-run-hour">Daily metrics update hour (SGT, 0-23)</label>
                             <input type="number" id="settings-metrics-run-hour" min="0" max="23" placeholder="6" value="{{ METRICS_RUN_HOUR }}" required class="settings-input-hour">
                             <small class="form-help settings-help-text">
@@ -387,15 +401,15 @@
                         </div>
                     </div>
 
-                    <!-- IBKR Systemd Action Triggers -->
+                    <!-- IBKR Automation Webhooks -->
                     <div class="form-group">
-                        <label class="maintenance-field-label">🤖 IBKR Systemd Action Triggers</label>
+                        <label class="maintenance-field-label">🤖 IBKR Automation Webhooks</label>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; margin-top: 4px;">
-                            Generates JSON trigger payload files in <code>/app/triggers/ib/</code> for external systemd watcher services.
+                            Dispatches webhooks to your external automation services to trigger data download and flex report generation.
                         </p>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button id="btn-ib-download-data" class="btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('download_data')">🔄 Trigger IBKR Data Download</button>
-                            <button id="btn-ib-flex-dividend" class="btn" style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.4); color: #a78bfa; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbSystemdAction('flex_dividend')">💰 Trigger Dividend Flex Report</button>
+                            <button id="btn-ib-download-data" class="btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbWebhookAction('download_data')">🔄 Trigger IBKR Data Download</button>
+                            <button id="btn-ib-flex-dividend" class="btn" style="background: rgba(167, 139, 250, 0.15); border: 1px solid rgba(167, 139, 250, 0.4); color: #a78bfa; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 6px;" onclick="triggerIbWebhookAction('flex_dividend')">💰 Trigger Dividend Flex Report</button>
                         </div>
                     </div>
                 </div>

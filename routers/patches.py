@@ -282,40 +282,71 @@ def get_system_ib_status():
     }
 
 @router.post("/maintenance/trigger-ib-action")
-def trigger_ib_systemd_action(req: SystemdTriggerRequest):
-    """Writes a JSON trigger file to /app/triggers/ib/ for external systemd/file watcher execution."""
+def trigger_ib_action(req: SystemdTriggerRequest):
+    """Triggers external IBKR automation jobs via configured webhook URLs."""
     action = req.action.strip()
     if action not in ["download_data", "flex_dividend"]:
         raise HTTPException(status_code=400, detail=f"Unsupported action: '{action}'. Allowed actions: 'download_data', 'flex_dividend'")
         
+    from services.rebuild_dashboard import load_config
+    config = load_config()
+    ext_services = config.get("external_services", {})
+
+    url_key = "ib_download_webhook_url" if action == "download_data" else "ib_flex_dividend_webhook_url"
+    action_label = "IBKR Data Download" if action == "download_data" else "Dividend Flex Report"
+    webhook_url = (ext_services.get(url_key) or "").strip()
+
+    if not webhook_url:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Webhook URL for {action_label} is not configured in Settings ({url_key})."
+        )
+
     try:
+        import urllib.request
+        import ssl
         from datetime import datetime
-        os.makedirs(SYSTEM_IB_DIR, exist_ok=True)
-        filename = f"{action}.json"
-        
-        status_check = check_and_clean_trigger_file(filename)
-        if status_check["pending"]:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Trigger file '{filename}' is already pending processing by external watcher ({status_check['elapsed_seconds']}s elapsed)."
-            )
-        
-        target_filepath = os.path.join(SYSTEM_IB_DIR, filename)
-        payload = {
+
+        payload = json.dumps({
             "action": action,
-            "created_at": datetime.now().isoformat()
-        }
-        
-        with open(target_filepath, "w") as f:
-            json.dump(payload, f, indent=2)
-            
+            "triggered_at": datetime.now().isoformat()
+        }).encode("utf-8")
+
+        # Bypass SSL verification as per project standards for internal webhooks
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
+        http_req = urllib.request.Request(
+            webhook_url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "Portfolio-Manager-Webhook-Trigger/1.0"
+            },
+            method="POST"
+        )
+
+        with urllib.request.urlopen(http_req, context=ctx, timeout=15) as resp:
+            resp_code = resp.getcode()
+            resp_body = resp.read().decode("utf-8", errors="replace")[:300]
+            logger.info("Dispatched webhook for %s to %s (HTTP %d)", action, webhook_url, resp_code)
+
         return {
             "status": "success",
-            "message": f"Successfully created trigger file '{filename}' in '{SYSTEM_IB_DIR}'",
+            "message": f"Successfully dispatched {action_label} webhook (HTTP {resp_code}).",
             "action": action,
-            "filepath": target_filepath
+            "webhook_url": webhook_url,
+            "response_sample": resp_body
         }
-    except HTTPException:
-        raise
+    except urllib.error.HTTPError as e:
+        err_msg = f"Webhook endpoint returned HTTP {e.code}: {e.reason}"
+        logger.error("[trigger-webhook] %s -> %s", action, err_msg)
+        raise HTTPException(status_code=502, detail=err_msg)
+    except urllib.error.URLError as e:
+        err_msg = f"Failed to connect to webhook URL: {e.reason}"
+        logger.error("[trigger-webhook] %s -> %s", action, err_msg)
+        raise HTTPException(status_code=502, detail=err_msg)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create systemd trigger file: {str(e)}")
+        logger.error("[trigger-webhook] Unexpected error: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to dispatch webhook: {str(e)}")

@@ -41,6 +41,8 @@ def calculate_trading_date():
 DEFAULT_OPTIONS_TRACKER_URL = ""
 DEFAULT_BACKTESTER_URL = ""
 DEFAULT_TRANSACTION_OCR_URL = ""
+DEFAULT_IB_DOWNLOAD_WEBHOOK_URL = ""
+DEFAULT_IB_FLEX_DIVIDEND_WEBHOOK_URL = ""
 DEFAULT_CLASSIFICATION_PRIORITY = []
 DEFAULT_METRICS_RUN_HOUR = 6
 DEFAULT_ALLOWED_DOCUMENTS = {
@@ -108,6 +110,10 @@ def load_config():
         config["external_services"]["backtester_url"] = DEFAULT_BACKTESTER_URL
     if "transaction_ocr_url" not in config["external_services"] or not config["external_services"]["transaction_ocr_url"]:
         config["external_services"]["transaction_ocr_url"] = DEFAULT_TRANSACTION_OCR_URL
+    if "ib_download_webhook_url" not in config["external_services"] or not config["external_services"]["ib_download_webhook_url"]:
+        config["external_services"]["ib_download_webhook_url"] = DEFAULT_IB_DOWNLOAD_WEBHOOK_URL
+    if "ib_flex_dividend_webhook_url" not in config["external_services"] or not config["external_services"]["ib_flex_dividend_webhook_url"]:
+        config["external_services"]["ib_flex_dividend_webhook_url"] = DEFAULT_IB_FLEX_DIVIDEND_WEBHOOK_URL
 
     if "sorting" not in config:
         config["sorting"] = {}

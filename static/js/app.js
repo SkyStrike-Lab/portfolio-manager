@@ -1985,6 +1985,8 @@ function setupFormSubmissions() {
             const optionsUrl = document.getElementById("settings-options-tracker-url").value.trim();
             const backtesterUrl = document.getElementById("settings-backtester-url").value.trim();
             const transactionOcrUrl = document.getElementById("settings-transaction-ocr-url") ? document.getElementById("settings-transaction-ocr-url").value.trim() : "";
+            const ibDownloadWebhookUrl = document.getElementById("settings-ib-download-webhook-url") ? document.getElementById("settings-ib-download-webhook-url").value.trim() : "";
+            const ibFlexDividendWebhookUrl = document.getElementById("settings-ib-flex-dividend-webhook-url") ? document.getElementById("settings-ib-flex-dividend-webhook-url").value.trim() : "";
             const metricsRunHourVal = parseInt(document.getElementById("settings-metrics-run-hour").value.trim());
             const metricsRunHour = isNaN(metricsRunHourVal) ? 6 : metricsRunHourVal;
             
@@ -1993,6 +1995,8 @@ function setupFormSubmissions() {
                 "external_services.options_tracker_url": optionsUrl,
                 "external_services.backtester_url": backtesterUrl,
                 "external_services.transaction_ocr_url": transactionOcrUrl,
+                "external_services.ib_download_webhook_url": ibDownloadWebhookUrl,
+                "external_services.ib_flex_dividend_webhook_url": ibFlexDividendWebhookUrl,
                 "cron.metrics_run_hour": metricsRunHour
             };
             
@@ -2011,6 +2015,7 @@ function setupFormSubmissions() {
                 
                 if (res.ok) {
                     showToast("Settings updated successfully.");
+                    await updateIbWebhookButtonStates();
                 } else {
                     const errData = await res.json();
                     showToast("Failed to save settings: " + (errData.detail || "Unknown error"), "error");
@@ -2050,6 +2055,19 @@ async function loadSettingsEditor() {
             const transactionOcrEl = document.getElementById("settings-transaction-ocr-url");
             if (transactionOcrEl) {
                 transactionOcrEl.value = transactionOcrUrl;
+            }
+
+            // IBKR Automation Webhook URLs
+            const ibDownloadWebhookUrl = (settings.external_services && settings.external_services.ib_download_webhook_url) || "";
+            const ibDownloadEl = document.getElementById("settings-ib-download-webhook-url");
+            if (ibDownloadEl) {
+                ibDownloadEl.value = ibDownloadWebhookUrl;
+            }
+
+            const ibFlexDividendWebhookUrl = (settings.external_services && settings.external_services.ib_flex_dividend_webhook_url) || "";
+            const ibFlexDividendEl = document.getElementById("settings-ib-flex-dividend-webhook-url");
+            if (ibFlexDividendEl) {
+                ibFlexDividendEl.value = ibFlexDividendWebhookUrl;
             }
             
             // Metrics Run Hour
@@ -3911,85 +3929,56 @@ function setupTransactionModalCalculation() {
 let cachedPatches = [];
 
 async function loadOperationsTab() {
-    await checkSystemIbStatus();
+    await updateIbWebhookButtonStates();
 }
 
 async function loadMaintenanceTab() {
     await Promise.all([loadDatabaseBackups(), loadPatchesList(), loadImportWizard()]);
 }
 
-let systemIbStatusInterval = null;
-let lastKnownErrors = { download_data: null, flex_dividend: null };
-
-async function checkSystemIbStatus() {
+async function updateIbWebhookButtonStates() {
     const btnDownload = document.getElementById("btn-ib-download-data");
     const btnDividend = document.getElementById("btn-ib-flex-dividend");
-    if (!btnDownload || !btnDividend) return;
-    
+    if (!btnDownload && !btnDividend) return;
+
     try {
-        const res = await fetch("/api/maintenance/system-ib-status");
+        const res = await fetch("/api/settings");
         if (res.ok) {
-            const status = await res.json();
-            
-            // Check for timeout errors reported from backend
-            if (status.download_data_error && status.download_data_error !== lastKnownErrors.download_data) {
-                lastKnownErrors.download_data = status.download_data_error;
-                showToast(status.download_data_error, "error");
-                const consoleOutput = document.getElementById("patch-console-pre");
-                if (consoleOutput) {
-                    consoleOutput.textContent += `\n[${new Date().toLocaleTimeString()}] ERROR: ${status.download_data_error}`;
-                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
-                }
-            }
-            if (status.flex_dividend_error && status.flex_dividend_error !== lastKnownErrors.flex_dividend) {
-                lastKnownErrors.flex_dividend = status.flex_dividend_error;
-                showToast(status.flex_dividend_error, "error");
-                const consoleOutput = document.getElementById("patch-console-pre");
-                if (consoleOutput) {
-                    consoleOutput.textContent += `\n[${new Date().toLocaleTimeString()}] ERROR: ${status.flex_dividend_error}`;
-                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            const settings = await res.json();
+            const ext = settings.external_services || {};
+            const downloadUrl = (ext.ib_download_webhook_url || "").trim();
+            const flexUrl = (ext.ib_flex_dividend_webhook_url || "").trim();
+
+            if (btnDownload) {
+                if (downloadUrl) {
+                    btnDownload.disabled = false;
+                    btnDownload.style.opacity = "1";
+                    btnDownload.style.cursor = "pointer";
+                    btnDownload.title = `Trigger webhook at ${downloadUrl}`;
+                } else {
+                    btnDownload.disabled = true;
+                    btnDownload.style.opacity = "0.4";
+                    btnDownload.style.cursor = "not-allowed";
+                    btnDownload.title = "Configure 'IBKR data download webhook URL' in Configuration to enable";
                 }
             }
 
-            // Update Download Data Button state
-            if (status.download_data_pending) {
-                btnDownload.disabled = true;
-                btnDownload.style.opacity = "0.5";
-                btnDownload.style.cursor = "not-allowed";
-                const elapsedStr = status.download_data_elapsed ? ` (${status.download_data_elapsed}s)` : '';
-                btnDownload.innerText = `⏳ Download Data Pending${elapsedStr}`;
-            } else {
-                btnDownload.disabled = false;
-                btnDownload.style.opacity = "1";
-                btnDownload.style.cursor = "pointer";
-                btnDownload.innerText = "🔄 Trigger IBKR Data Download";
-            }
-            
-            // Update Flex Dividend Button state
-            if (status.flex_dividend_pending) {
-                btnDividend.disabled = true;
-                btnDividend.style.opacity = "0.5";
-                btnDividend.style.cursor = "not-allowed";
-                const elapsedStr = status.flex_dividend_elapsed ? ` (${status.flex_dividend_elapsed}s)` : '';
-                btnDividend.innerText = `⏳ Dividend Flex Pending${elapsedStr}`;
-            } else {
-                btnDividend.disabled = false;
-                btnDividend.style.opacity = "1";
-                btnDividend.style.cursor = "pointer";
-                btnDividend.innerText = "💰 Trigger Dividend Flex Report";
-            }
-
-            // Manage polling loop: if any trigger is pending, poll every 5s until completed or timed out
-            const anyPending = status.download_data_pending || status.flex_dividend_pending;
-            if (anyPending && !systemIbStatusInterval) {
-                systemIbStatusInterval = setInterval(checkSystemIbStatus, 5000);
-            } else if (!anyPending && systemIbStatusInterval) {
-                clearInterval(systemIbStatusInterval);
-                systemIbStatusInterval = null;
+            if (btnDividend) {
+                if (flexUrl) {
+                    btnDividend.disabled = false;
+                    btnDividend.style.opacity = "1";
+                    btnDividend.style.cursor = "pointer";
+                    btnDividend.title = `Trigger webhook at ${flexUrl}`;
+                } else {
+                    btnDividend.disabled = true;
+                    btnDividend.style.opacity = "0.4";
+                    btnDividend.style.cursor = "not-allowed";
+                    btnDividend.title = "Configure 'IBKR dividend flex report webhook URL' in Configuration to enable";
+                }
             }
         }
     } catch (err) {
-        console.error("Error checking system IB status:", err);
+        console.error("Failed to check webhook configuration status:", err);
     }
 }
 
@@ -4118,8 +4107,18 @@ window.handleAdminRebuildCache = async function() {
     }
 };
 
-window.triggerIbSystemdAction = async function(action) {
+window.triggerIbWebhookAction = async function(action) {
     const actionLabel = action === 'download_data' ? 'IBKR Data Download' : 'Dividend Flex Report';
+    const btnId = action === 'download_data' ? 'btn-ib-download-data' : 'btn-ib-flex-dividend';
+    const btn = document.getElementById(btnId);
+    const originalText = btn ? btn.innerText : "";
+
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = "0.6";
+        btn.innerText = `⏳ Triggering ${actionLabel}...`;
+    }
+
     try {
         const res = await fetch("/api/maintenance/trigger-ib-action", {
             method: "POST",
@@ -4127,23 +4126,37 @@ window.triggerIbSystemdAction = async function(action) {
             body: JSON.stringify({ action: action })
         });
         const data = await res.json();
+        const consoleOutput = document.getElementById("patch-console-pre");
+
         if (res.ok) {
-            showToast(`Triggered ${actionLabel}! (${action}.json created in /app/triggers/ib/)`);
-            const consoleOutput = document.getElementById("patch-console-pre");
+            showToast(data.message || `Triggered ${actionLabel} webhook!`);
             if (consoleOutput) {
                 consoleOutput.textContent += `\n[${new Date().toLocaleTimeString()}] SUCCESS: ${data.message}`;
+                if (data.webhook_url) {
+                    consoleOutput.textContent += `\n  Target: ${data.webhook_url}`;
+                }
                 consoleOutput.scrollTop = consoleOutput.scrollHeight;
             }
         } else {
             showToast(data.detail || `Failed to trigger ${actionLabel}`, "error");
+            if (consoleOutput) {
+                consoleOutput.textContent += `\n[${new Date().toLocaleTimeString()}] ERROR: ${data.detail || "Trigger failed"}`;
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            }
         }
     } catch (err) {
-        console.error("Systemd trigger error:", err);
-        showToast("Network error triggering system action.", "error");
+        console.error("Webhook trigger error:", err);
+        showToast("Network error triggering webhook.", "error");
     } finally {
-        await checkSystemIbStatus();
+        if (btn) {
+            btn.innerText = originalText;
+        }
+        await updateIbWebhookButtonStates();
     }
 };
+
+// Backwards compatibility alias
+window.triggerIbSystemdAction = window.triggerIbWebhookAction;
 
 window.handleAdminImportPriceHistory = async function(dryRun = false) {
     const btn = document.getElementById(dryRun ? "btn-admin-preview-history" : "btn-admin-import-history");
