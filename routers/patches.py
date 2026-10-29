@@ -5,6 +5,7 @@ import json
 import sqlite3
 import traceback
 import importlib.util
+import logging
 from typing import Dict, Any, List
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 import re
@@ -12,6 +13,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from core.database import DB_FILE
+
+logger = logging.getLogger("uvicorn.error")
 
 router = APIRouter(prefix="/api")
 
