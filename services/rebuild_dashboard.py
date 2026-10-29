@@ -45,7 +45,7 @@ DEFAULT_CLASSIFICATION_PRIORITY = []
 DEFAULT_METRICS_RUN_HOUR = 6
 DEFAULT_ALLOWED_DOCUMENTS = {
     "stock-options": "data/stock-options.json",
-    "ib-data": "data/ib_data.json"
+    "ib-data": os.environ.get("IB_DATA_FILE") or "data/ib_data.json"
 }
 
 # Helper to load config
@@ -94,6 +94,11 @@ def load_config():
     for k, v in DEFAULT_ALLOWED_DOCUMENTS.items():
         if k not in config["allowed_documents"] or not config["allowed_documents"][k]:
             config["allowed_documents"][k] = v
+
+    # If IB_DATA_FILE environment variable is explicitly provided, enforce as highest priority
+    env_ib_data = os.environ.get("IB_DATA_FILE")
+    if env_ib_data and env_ib_data.strip():
+        config["allowed_documents"]["ib-data"] = env_ib_data.strip()
 
     if "external_services" not in config:
         config["external_services"] = {}

@@ -125,10 +125,16 @@ def get_cached_view(filename: str, price_mode: str, force: bool = False, ingest_
     # Try direct filesystem lookup if it's a static file (e.g. ib_data.json)
     if normalized_filename.startswith("src/"):
         clean_name = normalized_filename[4:]  # remove src/
-        data_path = f"config/{clean_name}"
-        if not os.path.exists(data_path):
-            data_path = f"data/{clean_name}"
-        if os.path.exists(data_path):
+        data_path = None
+        if clean_name in ("ib_data.json", "ib-data"):
+            from services.rebuild_dashboard import load_config
+            cfg = load_config()
+            data_path = cfg.get("allowed_documents", {}).get("ib-data")
+        if not data_path or not os.path.exists(data_path):
+            data_path = f"config/{clean_name}"
+            if not os.path.exists(data_path):
+                data_path = f"data/{clean_name}"
+        if data_path and os.path.exists(data_path):
             with open(data_path, 'r', encoding='utf-8') as f:
                 try:
                     return JSONResponse(content=json.load(f))
