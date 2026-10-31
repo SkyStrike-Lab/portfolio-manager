@@ -566,7 +566,7 @@ def fetch_options_details(exchange_rates, trading_date=None):
     usd_rate = exchange_rates.get('USD', 1.0)
     
     total_profit_usd = sum(
-        item.get('realized_pnl_usd', 0.0) 
+        item.get('broker_adjusted_pnl_usd') if item.get('broker_adjusted_pnl_usd') is not None else item.get('realized_pnl_usd', 0.0)
         for item in all_options 
         if item.get('status') == 'Closed'
     )
@@ -719,7 +719,9 @@ def fetch_options_details(exchange_rates, trading_date=None):
                 if closed_dt_naive >= start_date:
                     monday = closed_dt_naive - timedelta(days=closed_dt_naive.weekday())
                     week_key = monday.strftime('%Y-%m-%d')
-                    pos['realized_pnl_sgd'] = pos.get('realized_pnl_usd', 0.0) * usd_rate
+                    pos_pnl_usd = pos.get('broker_adjusted_pnl_usd') if pos.get('broker_adjusted_pnl_usd') is not None else pos.get('realized_pnl_usd', 0.0)
+                    pos['realized_pnl_usd'] = pos_pnl_usd
+                    pos['realized_pnl_sgd'] = pos_pnl_usd * usd_rate
                     pos['date_closed'] = closed_dt_naive.strftime('%Y-%m-%d')
                     pos['action'] = closing_tx['transaction_type'] if closing_tx else pos.get('initial_type', '')
                     
@@ -747,12 +749,12 @@ def fetch_options_details(exchange_rates, trading_date=None):
                         
                     grp = w["groups"][group_id]
                     grp["legs"].append(pos)
-                    grp["realized_pnl_usd"] += pos.get('realized_pnl_usd', 0.0)
+                    grp["realized_pnl_usd"] += pos_pnl_usd
                     grp["realized_pnl_sgd"] += pos['realized_pnl_sgd']
                     grp["max_hold_days"] = max(grp["max_hold_days"], pos['hold_days'])
                     
                     w["closed_pnl"] += pos['realized_pnl_sgd']
-                    w["closed_pnl_usd"] += pos.get('realized_pnl_usd', 0.0)
+                    w["closed_pnl_usd"] += pos_pnl_usd
                     
     sorted_weeks = []
     for week_start in sorted(weeks.keys(), reverse=True):
@@ -782,7 +784,8 @@ def fetch_options_details(exchange_rates, trading_date=None):
                         closed_dt_str = tx['date'][:10]
                         break
                 if closed_dt_str == trading_date:
-                    options_daily_realized_sgd += pos.get('realized_pnl_usd', 0.0) * usd_rate
+                    pos_pnl_usd = pos.get('broker_adjusted_pnl_usd') if pos.get('broker_adjusted_pnl_usd') is not None else pos.get('realized_pnl_usd', 0.0)
+                    options_daily_realized_sgd += pos_pnl_usd * usd_rate
 
     return {
         "options_profit_sgd": options_profit_sgd,
