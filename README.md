@@ -71,6 +71,7 @@ No authentication, CSRF validation, or multi-user access controls are implemente
 * **Option Deliveries (Assignments & Exercises) Sync**: Interactive modal on the Trades Ledger to fetch option assignments and exercises from Options Tracker (`/api/deliveries`), review trade details, select target portfolios, and import stock executions with effective basis pricing and database-enforced zero-duplicate guarantees.
 * **Dynamic Database Backups, Operations & Patching**: Admin tools in Control Center for managing database backups, hot-restoring databases, triggering administrative price refreshes (bypassing exchange session rules), and running custom patching manifests.
 * **Smart & Synchronous Yahoo Finance Batch Ingestion**: Fetches prices in single batches using `yfinance` with market-session open/closed awareness, 15-minute intraday caching, and synchronous UI execution for immediate screen updates.
+* **Price History Gap-Filling & Bulk Overrides**: Interactive date-level price editor on the dashboard and bulk JSON history override imports (`/api/prices/import-history`) in Control Center to backfill missing bars or adjust illiquid securities with manual protection (`is_manual = 1`).
 * **Transaction Visualizer (TX Visualizer)**: View per-ticker historical stock price candlestick charts (7d, 1m, 3m, 6m, YTD, 1y, 5y, all, and custom date range) overlaying your historical buy/sell trade executions directly on the price curve, with interactive tooltips showing trades and 3-decimal OHLC data.
 
 ---
@@ -188,7 +189,7 @@ The project has been refactored into a modern, modular architecture:
   - [ingestion/importer.py](ingestion/importer.py): Parses Holdings and Transactions CSV exports.
 * **`routers/`**: Decoupled, modular controller endpoints:
   - [routers/views.py](routers/views.py): Single Page Application dashboard shell view routing.
-  - [routers/prices.py](routers/prices.py): Price history queries, manual bar gap-filling, date-level overrides, and yfinance price refreshes.
+  - [routers/prices.py](routers/prices.py): Price history queries, bulk price history override imports (`/api/prices/import-history`), manual bar gap-filling, date-level overrides, and yfinance price refreshes.
   - [routers/dashboard.py](routers/dashboard.py): REST payload streaming for active, closed, history, and performance views.
   - [routers/dividends.py](routers/dividends.py): Dividend transactions management and IBKR flex report ingestion.
   - [routers/portfolios.py](routers/portfolios.py): Portfolio creation, updates, and classification management.

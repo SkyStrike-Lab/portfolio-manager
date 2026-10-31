@@ -124,6 +124,23 @@ Manage pulling and importing option assignments and exercises from Options Track
     }
     ```
 
+### F. Price History & Bulk Overrides Import
+Manage single-date price overrides and bulk JSON history imports.
+* **Bulk Import OHLC History**: `POST /api/prices/import-history`
+  * *Parameters* (`multipart/form-data`):
+    * `file` (optional, binary file upload): JSON object mapping symbols to arrays of OHLC bars (`[{"date": "YYYY-MM-DD", "close": 10.5, ...}]`).
+    * `file_path` (optional, string): Server file path (e.g. `tmp/history.json`).
+    * `dry_run` (optional, boolean, default `false`): When `true`, returns evaluation metrics without committing database writes.
+  * *Description*: Skips bars matching existing close prices, imports new dates or modified closes as `is_manual = 1`, and synchronizes snapshots in `ticker_prices`.
+  * *cURL Example*:
+    ```bash
+    curl -X POST http://localhost:8080/api/prices/import-history \
+      -F "file=@/path/to/history.json" \
+      -F "dry_run=false"
+    ```
+* **Single Date Manual Price**: `POST /api/prices/manual-history` (`{"symbol": "AAPL", "date": "2026-10-25", "price": 180.5}`)
+* **Delete Single Date Override**: `DELETE /api/prices/manual-history/{symbol}/{date}`
+
 ---
 
 ## 💾 3. Data File Uploads & Reconciliation

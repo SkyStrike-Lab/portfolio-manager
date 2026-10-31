@@ -45,7 +45,57 @@ Users can manage price history entries directly from the dashboard:
 
 ---
 
-## 4. API Reference
+## 4. Bulk Price History Overrides Import (Control Center & JSON)
+
+For securities that need historical OHLC price bars backfilled in bulk (e.g., from an external historical JSON export):
+
+1. Navigate to **Control Center** $\rightarrow$ **Maintenance** tab.
+2. Locate the **📈 Bulk Import Price History Overrides** section.
+3. Input options:
+   - **Upload File**: Select a `.json` file directly from your computer.
+   - **Server Path**: Specify a relative or absolute server path (defaults to `tmp/history.json` if empty).
+4. **Dry Run Preview**: Click **🔍 Dry Run Preview** to simulate the operation and view evaluated, skipped, overridden, and newly inserted counts in the operations console without modifying database records.
+5. **Execute Import**: Click **📥 Import Overrides** to persist the changes.
+
+### Expected JSON Schema
+The import payload expects a JSON object mapping ticker symbols to an array of bar objects:
+```json
+{
+  "AMHE-U": [
+    {
+      "date": "2026-07-24",
+      "open": 10.50,
+      "high": 10.80,
+      "low": 10.45,
+      "close": 10.75
+    },
+    {
+      "date": "2026-07-27",
+      "open": 10.75,
+      "high": 10.90,
+      "low": 10.60,
+      "close": 10.85
+    }
+  ],
+  "NVDA": [
+    {
+      "date": "2026-07-24",
+      "close": 120.50
+    }
+  ]
+}
+```
+*Note: `open`, `high`, and `low` fields are optional. If omitted, they default to `close`.*
+
+### Import Logic & Deduplication Rules:
+* **Symbol Normalization**: Automatically converts dot notation to hyphens (e.g., `AMHE.U` $\rightarrow$ `AMHE-U`).
+* **Close Matching Skips**: If a bar date already exists and the `close` price matches the existing record within 4 decimals, the entry is skipped to preserve original historical tracking.
+* **Manual Override Flag**: Any new date or modified close price is inserted/updated with `is_manual = 1` so future automated `yfinance` batch updates will not overwrite it.
+* **Snapshot & Cache Synchronization**: Automatically updates current snapshot values in `ticker_prices` and rebuilds the in-memory dashboard cache.
+
+---
+
+## 5. API Reference
 
 ### `GET /api/prices/history-log/{symbol}`
 Retrieves historical price bars from `ticker_price_history` for the given symbol, including the `is_manual` flag and computed daily percentage changes.
@@ -63,9 +113,38 @@ Inserts or updates a manual price history bar for a specific date:
 ### `DELETE /api/prices/manual-history/{symbol}/{date}`
 Deletes a manual entry for the given symbol and date from `ticker_price_history` and resynchronizes the ticker snapshot.
 
+### `POST /api/prices/import-history`
+Bulk imports historical OHLC price bars from a multipart file upload or server file path.
+* **Form Parameters**:
+  * `file` (UploadFile, optional): Uploaded JSON file.
+  * `file_path` (string, optional): Server path to JSON file (defaults to `tmp/history.json`).
+  * `dry_run` (boolean, optional, default `false`): Run validation and return diff metrics without writing to database.
+* **Response Example (`200 OK`)**:
+  ```json
+  {
+    "status": "success",
+    "dry_run": false,
+    "total_evaluated": 150,
+    "skipped": 120,
+    "overridden": 10,
+    "inserted": 20,
+    "affected_symbols": ["AMHE-U", "NVDA"],
+    "unknown_tickers": [],
+    "details_sample": [
+      {
+        "symbol": "AMHE-U",
+        "date": "2026-07-24",
+        "action": "overridden",
+        "old_close": 10.60,
+        "new_close": 10.75
+      }
+    ]
+  }
+  ```
+
 ---
 
-## 5. Maintenance & Patching
+## 6. Maintenance & Patching
 
 If historical prices need to be patched in bulk for an illiquid security, prepare a maintenance patch script under `patching/{4 digit running number}`:
 
