@@ -73,6 +73,7 @@
                         <div class="search-input-wrapper">
                             <input type="text" id="transaction-search-input" placeholder="Search by ticker, action, notes..." class="search-input-field">
                         </div>
+                        <button class="btn btn-secondary" id="open-deliveries-modal-btn">📥 Option Deliveries</button>
                         <button class="btn btn-primary" id="add-transaction-btn">+ Add Transaction</button>
                     </div>
                 </div>
@@ -345,6 +346,70 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="closeModal('portfolio-manage-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: OPTION DELIVERIES (ASSIGNMENTS & EXERCISES) -->
+    <div class="modal-overlay" id="deliveries-modal">
+        <div class="modal-content modal-content-wide">
+            <div class="modal-header">
+                <span>Option Deliveries (Assignments & Exercises)</span>
+                <button class="modal-close-btn" onclick="closeModal('deliveries-modal')">&times;</button>
+            </div>
+
+            <div class="deliveries-filter-bar">
+                <div class="deliveries-filter-group">
+                    <label for="deliveries-filter-since" class="deliveries-filter-label">Since:</label>
+                    <input type="date" id="deliveries-filter-since" class="deliveries-input">
+                </div>
+                <div class="deliveries-filter-group">
+                    <label for="deliveries-filter-symbol" class="deliveries-filter-label">Symbol:</label>
+                    <input type="text" id="deliveries-filter-symbol" placeholder="e.g. BE, TEST" class="deliveries-input deliveries-symbol-input">
+                </div>
+                <button type="button" class="btn btn-secondary" id="btn-refresh-deliveries">🔄 Refresh</button>
+                <div class="deliveries-filter-group deliveries-filter-right">
+                    <label for="deliveries-global-portfolio" class="deliveries-filter-label">Default Target Portfolio:</label>
+                    <select id="deliveries-global-portfolio" class="deliveries-portfolio-select"></select>
+                </div>
+            </div>
+
+            <div class="deliveries-info-banner">
+                💡 Stock trades are automatically booked at <strong>Effective Basis</strong> (<code>Strike - Option Premium</code>) because assignment profits are already accounted for in Options PnL.
+            </div>
+
+            <div class="deliveries-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="deliveries-th-checkbox">
+                                <input type="checkbox" id="deliveries-select-all" title="Select all unimported">
+                            </th>
+                            <th>Date</th>
+                            <th>Symbol</th>
+                            <th>Contract</th>
+                            <th>Action</th>
+                            <th>Shares</th>
+                            <th>Strike</th>
+                            <th>Effective Basis</th>
+                            <th>Target Portfolio</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deliveries-table-body">
+                        <tr>
+                            <td colspan="10" class="deliveries-empty-state">Loading option deliveries...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="deliveries-footer-bar">
+                <span id="deliveries-selected-count" class="text-secondary">0 deliveries selected</span>
+                <div>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('deliveries-modal')">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btn-import-deliveries" disabled>Import Selected Trades</button>
+                </div>
             </div>
         </div>
     </div>

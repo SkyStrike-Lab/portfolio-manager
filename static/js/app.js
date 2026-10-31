@@ -128,6 +128,7 @@ async function initApp() {
     setupAutocomplete();
     setupTableSorting();
     setupCustomAppEvents();
+    setupDeliveriesModal();
     
     // Initialize transaction modal calculation bindings
     setupTransactionModalCalculation();
@@ -2881,6 +2882,252 @@ function updateSortHeaders() {
             th.classList.add(sortDirection);
         }
     });
+}
+
+// --- OPTION DELIVERIES INTEGRATION ---
+let currentDeliveriesData = [];
+let currentPortfoliosList = [];
+
+function setupDeliveriesModal() {
+    const openBtn = document.getElementById("open-deliveries-modal-btn");
+    if (openBtn) {
+        openBtn.addEventListener("click", () => {
+            if (window.openModal) {
+                window.openModal("deliveries-modal");
+            }
+            fetchOptionDeliveries();
+        });
+    }
+
+    const refreshBtn = document.getElementById("btn-refresh-deliveries");
+    if (refreshBtn) {
+        refreshBtn.addEventListener("click", () => {
+            fetchOptionDeliveries();
+        });
+    }
+
+    const filterSince = document.getElementById("deliveries-filter-since");
+    if (filterSince) {
+        filterSince.addEventListener("change", () => {
+            fetchOptionDeliveries();
+        });
+    }
+
+    const filterSymbol = document.getElementById("deliveries-filter-symbol");
+    if (filterSymbol) {
+        filterSymbol.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                fetchOptionDeliveries();
+            }
+        });
+    }
+
+    const importBtn = document.getElementById("btn-import-deliveries");
+    if (importBtn) {
+        importBtn.addEventListener("click", () => {
+            importSelectedDeliveries();
+        });
+    }
+}
+
+async function fetchOptionDeliveries() {
+    const tbody = document.getElementById("deliveries-table-body");
+    const countEl = document.getElementById("deliveries-selected-count");
+    const importBtn = document.getElementById("btn-import-deliveries");
+    const selectAll = document.getElementById("deliveries-select-all");
+
+    if (selectAll) selectAll.checked = false;
+    if (countEl) countEl.textContent = "0 deliveries selected";
+    if (importBtn) importBtn.disabled = true;
+
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="10" class="deliveries-empty-state">Loading option deliveries...</td></tr>';
+    }
+
+    const since = document.getElementById("deliveries-filter-since") ? document.getElementById("deliveries-filter-since").value : "";
+    const symbol = document.getElementById("deliveries-filter-symbol") ? document.getElementById("deliveries-filter-symbol").value : "";
+
+    const params = new URLSearchParams();
+    if (since) params.append("since", since);
+    if (symbol) params.append("symbol", symbol);
+
+    try {
+        const resp = await fetch(`/api/options/deliveries?${params.toString()}`);
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || "Failed to fetch deliveries");
+        }
+        const data = await resp.json();
+        if (data.status === "warning") {
+            showToast(data.message, "error");
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="10" class="deliveries-empty-state">${data.message}</td></tr>`;
+            }
+            return;
+        }
+
+        currentDeliveriesData = data.deliveries || [];
+        currentPortfoliosList = data.portfolios || [];
+
+        // Populate global target portfolio dropdown if not already populated
+        const globalPortfolioSelect = document.getElementById("deliveries-global-portfolio");
+        if (globalPortfolioSelect && currentPortfoliosList.length > 0) {
+            globalPortfolioSelect.innerHTML = currentPortfoliosList.map(p => 
+                `<option value="${p.id}" ${p.id === data.default_portfolio_id ? 'selected' : ''}>${p.name}</option>`
+            ).join("");
+        }
+
+        renderDeliveriesTable(currentDeliveriesData, data.default_portfolio_id);
+    } catch (e) {
+        console.error(e);
+        showToast("Error loading option deliveries: " + e.message, "error");
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="10" class="deliveries-empty-state">Error: ${e.message}</td></tr>`;
+        }
+    }
+}
+
+function renderDeliveriesTable(deliveries, defaultPortfolioId) {
+    const tbody = document.getElementById("deliveries-table-body");
+    if (!tbody) return;
+
+    if (!deliveries || deliveries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="deliveries-empty-state">No option deliveries found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = deliveries.map(deliv => {
+        const isImported = deliv.is_imported;
+        const rowClass = isImported ? "deliveries-row-imported" : "";
+        const actionBadgeClass = deliv.action === "BUY" ? "deliveries-badge-buy" : "deliveries-badge-sell";
+        const statusBadge = isImported 
+            ? `<span class="deliveries-badge deliveries-badge-imported" title="Imported at ${deliv.imported_at || ''}">Imported</span>`
+            : `<span class="deliveries-badge deliveries-badge-new">New</span>`;
+
+        const targetPid = deliv.target_portfolio_id || defaultPortfolioId;
+        const portfolioSelectHtml = isImported
+            ? `<span>${(currentPortfoliosList.find(p => p.id === targetPid) || {}).name || 'Imported'}</span>`
+            : `<select class="deliveries-portfolio-select delivery-row-portfolio" data-id="${deliv.delivery_id}">
+                ${currentPortfoliosList.map(p => 
+                    `<option value="${p.id}" ${p.id === targetPid ? 'selected' : ''}>${p.name}</option>`
+                ).join("")}
+              </select>`;
+
+        const checkboxHtml = isImported 
+            ? `<input type="checkbox" disabled>`
+            : `<input type="checkbox" class="delivery-row-checkbox" data-id="${deliv.delivery_id}">`;
+
+        return `
+            <tr class="${rowClass}">
+                <td class="deliveries-th-checkbox">${checkboxHtml}</td>
+                <td>${deliv.settlement_date || '-'}</td>
+                <td><strong>${deliv.symbol}</strong></td>
+                <td>${deliv.contract_name || '-'}</td>
+                <td><span class="deliveries-badge ${actionBadgeClass}">${deliv.delivery_type} ${deliv.action}</span></td>
+                <td>${deliv.shares_count}</td>
+                <td>$${Number(deliv.strike_price).toFixed(2)}</td>
+                <td><strong>$${Number(deliv.effective_basis).toFixed(2)}</strong></td>
+                <td>${portfolioSelectHtml}</td>
+                <td>${statusBadge}</td>
+            </tr>
+        `;
+    }).join("");
+
+    attachDeliveriesEvents();
+}
+
+function attachDeliveriesEvents() {
+    const checkboxes = document.querySelectorAll(".delivery-row-checkbox");
+    const selectAll = document.getElementById("deliveries-select-all");
+    const importBtn = document.getElementById("btn-import-deliveries");
+    const countEl = document.getElementById("deliveries-selected-count");
+
+    function updateSelectionState() {
+        const selected = Array.from(checkboxes).filter(cb => cb.checked);
+        if (countEl) countEl.textContent = `${selected.length} deliveries selected`;
+        if (importBtn) importBtn.disabled = selected.length === 0;
+        if (selectAll) {
+            selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
+        }
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener("change", updateSelectionState);
+    });
+
+    if (selectAll) {
+        selectAll.onclick = function() {
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+            });
+            updateSelectionState();
+        };
+    }
+
+    const globalPortfolioSelect = document.getElementById("deliveries-global-portfolio");
+    if (globalPortfolioSelect) {
+        globalPortfolioSelect.onchange = function() {
+            const newPid = globalPortfolioSelect.value;
+            document.querySelectorAll(".delivery-row-portfolio").forEach(sel => {
+                sel.value = newPid;
+            });
+        };
+    }
+}
+
+async function importSelectedDeliveries() {
+    const selectedCheckboxes = Array.from(document.querySelectorAll(".delivery-row-checkbox:checked"));
+    if (selectedCheckboxes.length === 0) return;
+
+    const importBtn = document.getElementById("btn-import-deliveries");
+    if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.textContent = "Importing...";
+    }
+
+    const items = selectedCheckboxes.map(cb => {
+        const id = cb.dataset.id;
+        const deliv = currentDeliveriesData.find(d => d.delivery_id === id);
+        const rowSelect = document.querySelector(`.delivery-row-portfolio[data-id="${id}"]`);
+        const portfolioId = rowSelect ? parseInt(rowSelect.value, 10) : (deliv ? deliv.target_portfolio_id : null);
+        return {
+            delivery_id: id,
+            portfolio_id: portfolioId,
+            price: deliv ? deliv.trade_price : null
+        };
+    });
+
+    try {
+        const resp = await fetch("/api/options/deliveries/import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items })
+        });
+
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || "Import failed");
+        }
+
+        const res = await resp.json();
+        showToast(`Successfully imported ${res.imported} trades (${res.skipped} duplicates skipped).`, "success");
+        if (window.closeModal) {
+            window.closeModal("deliveries-modal");
+        }
+
+        // Reload transactions table
+        if (typeof loadTransactions === "function") {
+            loadTransactions();
+        }
+    } catch (e) {
+        showToast("Import error: " + e.message, "error");
+    } finally {
+        if (importBtn) {
+            importBtn.disabled = false;
+            importBtn.textContent = "Import Selected Trades";
+        }
+    }
 }
 
 function setupCustomAppEvents() {

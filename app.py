@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.database import init_db
 from core.migrations import run_migrations
 from core.cache import clear_dashboard_cache, get_cached_view, base_path
-from routers import views, portfolios, tickers, transactions, dividends, prices, dashboard, reports, uploads, settings, patches, api_v1
+from routers import views, portfolios, tickers, transactions, dividends, prices, dashboard, reports, uploads, settings, patches, api_v1, deliveries
 
 # Run Alembic migrations first, then initialize static schema guards
 run_migrations()
@@ -116,6 +116,7 @@ main_app.include_router(reports.router, tags=["reports"])
 main_app.include_router(uploads.router, tags=["uploads"])
 main_app.include_router(settings.router, tags=["settings"])
 main_app.include_router(patches.router, tags=["patches"])
+main_app.include_router(deliveries.router, tags=["deliveries"])
 
 # Mount static folder
 main_app.mount("/static", StaticFiles(directory="static"), name="static")

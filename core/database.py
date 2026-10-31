@@ -184,6 +184,23 @@ def init_db():
         FOREIGN KEY(ticker_id) REFERENCES tickers(id) ON DELETE CASCADE,
         FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS option_deliveries (
+        delivery_id TEXT PRIMARY KEY,
+        transaction_id INTEGER,
+        symbol TEXT NOT NULL,
+        delivery_type TEXT NOT NULL,
+        action TEXT NOT NULL,
+        shares INTEGER NOT NULL,
+        strike_price REAL NOT NULL,
+        effective_basis REAL NOT NULL,
+        settlement_date TEXT NOT NULL,
+        portfolio_id INTEGER,
+        imported_at TEXT NOT NULL,
+        raw_memo TEXT,
+        FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE SET NULL,
+        FOREIGN KEY (portfolio_id) REFERENCES portfolios(id) ON DELETE SET NULL
+    );
     """
     conn = get_connection()
     try:
