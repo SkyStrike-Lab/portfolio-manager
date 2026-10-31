@@ -91,6 +91,39 @@ Query consolidated portfolio and broker-level summaries for external dashboards 
 * **Portfolio Summary**: `GET /api/dashboard/summary?portfolio_id={id}`
   * *Description*: Returns single-portfolio valuation, unrealized/realized P&L, and current holdings list in SGD.
 
+### E. Option Deliveries (Assignments & Exercises) Synchronization
+Manage pulling and importing option assignments and exercises from Options Tracker.
+* **Query Option Deliveries**: `GET /api/options/deliveries`
+  * *Parameters*:
+    * `symbol` (optional query string): Filter deliveries by underlying ticker (e.g. `AAPL`, `BE`).
+    * `since` (optional query string, format `YYYY-MM-DD`): Filter deliveries settled on or after this date.
+  * *Response*: Returns unimported and previously imported deliveries with calculated `effective_basis`, `trade_price`, default target portfolio (`Discord Trades`), and import status.
+* **Import Deliveries into Trades**: `POST /api/options/deliveries/import`
+  * *Content-Type*: `application/json`
+  * *Description*: Imports selected deliveries as stock buy/sell transactions at Effective Basis (`strike - premium`) into the specified portfolio, logging `delivery_id` to `option_deliveries` to enforce strict zero-duplicate guarantees.
+  * *Request Body*:
+    ```json
+    {
+      "items": [
+        {
+          "delivery_id": "delivery-61",
+          "portfolio_id": 2,
+          "price": 157.0,
+          "notes": "Optional extra notes"
+        }
+      ]
+    }
+    ```
+  * *Response (`200 OK`)*:
+    ```json
+    {
+      "status": "success",
+      "imported": 1,
+      "skipped": 0,
+      "transaction_ids": [1549]
+    }
+    ```
+
 ---
 
 ## 💾 3. Data File Uploads & Reconciliation

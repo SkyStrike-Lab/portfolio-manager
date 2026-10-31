@@ -125,7 +125,7 @@ Combine these elements into a single JSON object containing `balances` and `port
 Once the `ib_data.json` file is generated, you have two options to import it into the Portfolio Manager:
 
 ### Option A: Background Filesystem Watcher (Cron)
-If running locally, place the generated file directly at `data/ib_data.json`. The daily weekday cron job running at 6:00 AM SGT reads this file to ingest cash metrics under `balances` into the database, and the dashboard reads it on-demand for position reconciliation.
+If running locally, place the generated file directly at `data/ib_data.json` (or any custom location specified via the `IB_DATA_FILE` environment variable). The daily weekday cron job running at 6:00 AM SGT reads this file to ingest cash metrics under `balances` into the database, and the dashboard reads it on-demand for position reconciliation.
 
 ### Option B: Upload via REST API (`POST /api/upload`)
 You can programmatically post the file using `curl` or a python request to the document upload endpoint to trigger immediate database reconciliation:

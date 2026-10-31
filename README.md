@@ -68,6 +68,7 @@ No authentication, CSRF validation, or multi-user access controls are implemente
 * **Interactive Dividend Calendar**: Grid/List monthly visualization (`/dividend-calendar`) with calendar views, monthly totals, search filters, and Interactive Brokers (IBKR) statement synchronization.
 * **IBKR Statement Reconciliation**: Automatically compares database positions against uploaded IBKR statement positions (`ib_data.json`) to display mismatch warnings and sync badges.
 * **Options & Stress-Testing Dashboards**: Integrates with external options trackers to visualize active contracts, risk exposure metrics, expiration profiles, and cash stress tests.
+* **Option Deliveries (Assignments & Exercises) Sync**: Interactive modal on the Trades Ledger to fetch option assignments and exercises from Options Tracker (`/api/deliveries`), review trade details, select target portfolios, and import stock executions with effective basis pricing and database-enforced zero-duplicate guarantees.
 * **Dynamic Database Backups, Operations & Patching**: Admin tools in Control Center for managing database backups, hot-restoring databases, triggering administrative price refreshes (bypassing exchange session rules), and running custom patching manifests.
 * **Smart & Synchronous Yahoo Finance Batch Ingestion**: Fetches prices in single batches using `yfinance` with market-session open/closed awareness, 15-minute intraday caching, and synchronous UI execution for immediate screen updates.
 * **Transaction Visualizer (TX Visualizer)**: View per-ticker historical stock price candlestick charts (7d, 1m, 3m, 6m, YTD, 1y, 5y, all, and custom date range) overlaying your historical buy/sell trade executions directly on the price curve, with interactive tooltips showing trades and 3-decimal OHLC data.
@@ -88,6 +89,7 @@ If you want to customize your setup, simply place/upload your custom files into 
 ### Environment Variables
 * `BASE_PATH`: Set this (e.g. `/portfolio`) to host the application under a custom prefix path. All internal endpoints, client-side fetch commands, header links, and script references will adapt dynamically.
 * `PORTFOLIO_DB_FILE`: File path for the SQLite database.
+* `IB_DATA_FILE`: Custom file path for the IBKR position report (defaults to `data/ib_data.json`).
 * `exchange_rates_file`: File path for exchange rate caches.
 
 ### Dynamic Upload Configuration (`config/config.json`)
@@ -116,12 +118,13 @@ The application integrates with external services configured under the `"externa
 
 ### 1. Options Tracker Service (`options_tracker_url`)
 * **Repository**: https://github.com/SkyStrike/options-tracker
-* **Purpose**: Fetches active options contracts, strategy legs, assignment risk, and premium metrics.
+* **Purpose**: Fetches active options contracts, strategy legs, assignment risk, premium metrics, and delivery executions (assignments and exercises).
 * **Configured Behavior**:
-  * The dashboard builder requests live options positions from this endpoint.
+  * The dashboard builder requests live options positions from this endpoint (`/api/positions`).
   * Displays the **Active Open Options** table.
   * Calculates and renders the **Risk & Liquidity Analysis** sections (Options Exposure & Risk, Cash Stress Test, Portfolio Stress Test, Expiration Profile).
   * Appends option P/L data to the main card header (**"Daily Performance & Options Unrealized"**).
+  * **Option Deliveries**: Provides the data source for the Trades Ledger **Option Deliveries** review modal (`/api/deliveries`), allowing 1-click import of option assignments (BUY) and exercises (SELL) booked at **Effective Basis** (`strike - option_premium`).
   * **Fallback**: If the endpoint is offline or times out, the backend falls back to the local `data/stock-options.json` file cache (if available).
 * **Unconfigured/Empty Behavior**:
   * Setting this URL to `""` or omitting it completely disables options tracking.
@@ -168,7 +171,7 @@ The project has been refactored into a modern, modular architecture:
 
 * [app.py](app.py): Entrypoint file serving the FastAPI REST API, registering modular sub-routers, and scheduling background loops.
 * **`core/`**: Core databases, calculations, cache layers, and schemas.
-  - [core/database.py](core/database.py): SQLite database schema definition, settings table, and migrations (no default portfolios are seeded; the database starts completely clean).
+  - [core/database.py](core/database.py): SQLite database schema definition, settings and option_deliveries tables, and migrations (no default portfolios are seeded; the database starts completely clean).
   - [core/calculations.py](core/calculations.py): FIFO cost-basis matching calculations, realized P&L, and currency conversions.
   - [core/models.py](core/models.py): Object representations for portfolios, positions, and trades.
   - [core/cache.py](core/cache.py): Handles in-memory dashboard rendering caches.
@@ -191,8 +194,9 @@ The project has been refactored into a modern, modular architecture:
   - [routers/portfolios.py](routers/portfolios.py): Portfolio creation, updates, and classification management.
   - [routers/tickers.py](routers/tickers.py): Ticker metadata updates, tax rates, and friendly name assignments.
   - [routers/transactions.py](routers/transactions.py): Trade transaction CRUD operations and cost basis recalculations.
+  - [routers/deliveries.py](routers/deliveries.py): Option deliveries query and trade import endpoints with deduplication.
   - [routers/api_v1.py](routers/api_v1.py): System parameters, brokers, and settings endpoints.
-  - [routers/patches.py](routers/patches.py): Maintenance patch execution engine, database backup/restore, and systemd IPC action triggers.
+  - [routers/patches.py](routers/patches.py): Maintenance patch execution engine, database backup/restore, and IBKR webhook triggers.
 * **`triggers/`**: Directory for external systemd watcher IPC trigger payload files (`triggers/ib/download_data.json` and `triggers/ib/flex_dividend.json`).
 * **`templates/`**: Single Page Application views and HTML component templates:
   - [templates/spa_shell.html](templates/spa_shell.html): Unified SPA shell layout, Vue 3 root instance, and modal dialogs.

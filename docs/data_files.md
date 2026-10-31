@@ -76,16 +76,18 @@ This document provides a detailed catalog of the various JSON configuration, cac
 
 #### External Integrations & System Settings
 For a full list of all system settings configurable via the Settings GUI or `/api/settings`, see **[Settings & System Configuration Reference](settings_configuration.md)**.
-* **`external_services.options_tracker_url`** (string): The HTTP address of the companion options tracker. If configured, activates option lists and cash stress test components. If left empty (`""`), all options components are dynamically hidden from the UI.
+* **`external_services.options_tracker_url`** (string): The HTTP address of the companion options tracker. If configured, activates open options lists, risk & stress test components, and powers Option Deliveries synchronization (`/api/deliveries`). If left empty (`""`), all options components are dynamically hidden from the UI.
 * **`external_services.backtester_url`** (string): The HTTP address of the companion backtesting service. If populated, renders direct link icons (🔗) next to assets pointing to historical backtests.
 * **`external_services.transaction_ocr_url`** (string): The HTTP address of the external transaction OCR service. If configured, adds a direct link under the **Services** top navigation dropdown.
+* **`external_services.ib_download_webhook_url`** (string): Webhook URL for triggering external IBKR data download.
+* **`external_services.ib_flex_dividend_webhook_url`** (string): Webhook URL for triggering external IBKR dividend flex reports.
 
 ---
 
 ### 2. `data/ib_data.json` (IBKR Live Portfolio Positions Cache)
 * **Purpose**: Caches the live inventory data retrieved from IBKR reports, including margin requirements, cash, and open asset lot metrics. Used as fallback data when Yahoo Finance is offline or fetching stock price definitions.
 * **Detailed Guide**: For a complete breakdown of this file's attributes, ingestion parameters, custom extraction scripts, and GUI setup details, see the **[IBKR Data File Guide (ib_data.json)](ib_data_guide.md)**.
-* **Storage Location**: Uploaded or synchronized to `data/ib_data.json`.
+* **Storage Location**: Uploaded or synchronized to `data/ib_data.json` (can be overridden via the `IB_DATA_FILE` environment variable).
 * **Schema & Structure**:
 ```json
 {

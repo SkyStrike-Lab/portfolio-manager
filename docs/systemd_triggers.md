@@ -6,6 +6,9 @@ This document describes the external file-watcher trigger architecture that allo
 
 ## 1. Overview & Architecture
 
+> [!NOTE]
+> In recent releases, adhoc triggers from the Control Center GUI dispatch directly to configurable webhooks (`external_services.ib_download_webhook_url` and `external_services.ib_flex_dividend_webhook_url`). The systemd path unit and directory watcher mechanism documented below remains supported for host-level daemon workflows.
+
 To keep the web container secure and decoupled from host-level cron/system privileges, trigger requests are written to watched JSON files inside `/app/triggers/ib/` (mounted to `./triggers/ib` on the host).
 
 ```mermaid

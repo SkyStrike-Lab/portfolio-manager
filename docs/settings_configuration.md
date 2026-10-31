@@ -30,7 +30,7 @@ flowchart TD
 
 ## 2. Actively Editable Settings (GUI & REST API)
 
-These **5 operational settings** are dynamically managed through the SQLite database, editable in the Control Center Settings panel, and modified via `POST /api/settings`:
+These **7 operational settings** are dynamically managed through the SQLite database, editable in the Control Center Settings panel, and modified via `POST /api/settings`:
 
 ### 2.1 `sorting.classification_priority`
 * **Type**: `list[str]`
@@ -50,7 +50,9 @@ These **5 operational settings** are dynamically managed through the SQLite data
 * **Type**: `str`
 * **Default**: `""` (Fallback: `"http://yui.home/options-tracker/api/positions"`)
 * **GUI Location**: Control Center $\rightarrow$ Settings $\rightarrow$ Options Tracker URL
-* **Usage**: The REST endpoint queried during dashboard cache builds to pull live open options contracts, strategy legs, and portfolio cash assignment risk metrics.
+* **Usage**: The base or endpoint URL for the Options Tracker service. Used for:
+  1. Pulling live open options contracts, strategy legs, and portfolio cash assignment risk metrics (`/api/positions`).
+  2. Syncing option assignments and exercises (deliveries) directly into the Trades Ledger (`/api/deliveries`).
 * **Example Payload**:
   ```json
   {
@@ -97,6 +99,34 @@ These **5 operational settings** are dynamically managed through the SQLite data
   ```json
   {
     "cron.metrics_run_hour": 6
+  }
+  ```
+
+---
+
+### 2.6 `external_services.ib_download_webhook_url`
+* **Type**: `str`
+* **Default**: `""`
+* **GUI Location**: Control Center $\rightarrow$ Settings $\rightarrow$ IBKR data download webhook URL
+* **Usage**: Webhook URL called when triggering the adhoc IBKR data download action in Control Center. When empty, the trigger button is automatically disabled in the UI.
+* **Example Payload**:
+  ```json
+  {
+    "external_services.ib_download_webhook_url": "http://192.168.1.50:5000/webhook/ib-download"
+  }
+  ```
+
+---
+
+### 2.7 `external_services.ib_flex_dividend_webhook_url`
+* **Type**: `str`
+* **Default**: `""`
+* **GUI Location**: Control Center $\rightarrow$ Settings $\rightarrow$ IBKR dividend flex report webhook URL
+* **Usage**: Webhook URL called when triggering the adhoc IBKR dividend flex report generation in Control Center. When empty, the trigger button is automatically disabled in the UI.
+* **Example Payload**:
+  ```json
+  {
+    "external_services.ib_flex_dividend_webhook_url": "http://192.168.1.50:5000/webhook/ib-flex-dividend"
   }
   ```
 
