@@ -197,7 +197,6 @@ The project has been refactored into a modern, modular architecture:
   - [routers/deliveries.py](routers/deliveries.py): Option deliveries query and trade import endpoints with deduplication.
   - [routers/api_v1.py](routers/api_v1.py): System parameters, brokers, and settings endpoints.
   - [routers/patches.py](routers/patches.py): Maintenance patch execution engine, database backup/restore, and IBKR webhook triggers.
-* **`triggers/`**: Directory for external systemd watcher IPC trigger payload files (`triggers/ib/download_data.json` and `triggers/ib/flex_dividend.json`).
 * **`templates/`**: Single Page Application views and HTML component templates:
   - [templates/spa_shell.html](templates/spa_shell.html): Unified SPA shell layout, Vue 3 root instance, and modal dialogs.
   - [templates/control_center.html](templates/control_center.html): Administrative dashboard for settings, data imports, database backups, and maintenance operations.
@@ -218,7 +217,6 @@ The system relies on supplemental data files (typically placed in the `/data` or
 | :--- | :--- | :--- | :--- |
 | **`data/config.json`** | Application parameters (conversion rates, color schemes, allowed uploads). | Loaded on startup and UI render. Primary config. | Falls back to **`config/config.json`**. |
 | **`data/ib_data.json`** | Broker position report containing actual holdings size, cost basis, and balances (NetLiquidation, GrossPositionValue, TotalCashValue) for IBKR. | Used for stock reconciliation (`IB Sync` badge / `IB Mismatch` warning) and cash reporting. | Reconciliation checks are skipped; cash reports default to database-only. |
-| **`triggers/ib/`** | Directory holding JSON payload files (`download_data.json`, `flex_dividend.json`) monitored by external systemd `.path` units or background file-watcher scripts. | Generated via Maintenance tab in Control Center or `POST /api/maintenance/trigger-ib-action`. Disallows duplicate runs while pending. | Created automatically on startup and when triggers are requested. |
 
 ---
 
@@ -238,7 +236,6 @@ Additional step-by-step documentation guides are available in the [docs/](docs/)
 10. **[JSON Data Files Reference](docs/data_files.md)**: Catalog and structural JSON schemas for system configurations and IBKR inventory caches.
 11. **[Advanced Scripting & API Guide](docs/advanced_scripting.md)**: Custom automation scripts, programmatic database pre-warming triggers, RESTful schema lookups, and interactive Swagger UI configurations.
 12. **[Illiquid Stock & Price History Guide](docs/illiquid_stock_price_update.md)**: Managing illiquid security prices, manual bar gap-filling, date-level overrides, and Closing vs Intraday P&L behavior.
-13. **[Systemd & File-Watcher Triggers Guide](docs/systemd_triggers.md)**: External trigger JSON payloads (`/app/triggers/ib/`), pending lock prevention, REST APIs, and systemd path unit configurations.
 
 ---
 

@@ -34,8 +34,5 @@ static/generated/
 
 tasks/
 
-# Systemd watcher trigger files
-triggers/
-
 sync-agent-branch.sh
 sync-branch.sh

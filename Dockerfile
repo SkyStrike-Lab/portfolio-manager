@@ -25,8 +25,8 @@ COPY --chown=appuser:appuser . /app
 
 RUN find /app/patching -type f -name "*.sh" -exec chmod +x {} +
 
-# Create directory for persistent sqlite and cache volume mounting, and systemd watchers
-RUN mkdir -p /app/data /app/triggers/ib && \
+# Create directory for persistent sqlite and cache volume mounting
+RUN mkdir -p /app/data && \
     chown -R appuser:appuser /app
 
 # Switch to non-root user

@@ -9,7 +9,6 @@ services:
     volumes:
       - ./data:/app/data
       - ./config:/app/config
-      - ./triggers:/app/triggers
     environment:
       - PORTFOLIO_DB_FILE=/app/data/portfolio.db
       - IB_DATA_FILE=${IB_DATA_FILE:-/app/data/ib_data.json}
