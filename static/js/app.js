@@ -2890,6 +2890,11 @@ let currentPortfoliosList = [];
 
 function setupDeliveriesModal() {
     const openBtn = document.getElementById("open-deliveries-modal-btn");
+    const deliveriesModal = document.getElementById("deliveries-modal");
+    if (!openBtn && !deliveriesModal) {
+        return;
+    }
+
     if (openBtn) {
         openBtn.addEventListener("click", () => {
             if (window.openModal) {

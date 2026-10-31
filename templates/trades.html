@@ -73,7 +73,9 @@
                         <div class="search-input-wrapper">
                             <input type="text" id="transaction-search-input" placeholder="Search by ticker, action, notes..." class="search-input-field">
                         </div>
+                        {% if OPTIONS_TRACKER_URL %}
                         <button class="btn btn-secondary" id="open-deliveries-modal-btn">📥 Option Deliveries</button>
+                        {% endif %}
                         <button class="btn btn-primary" id="add-transaction-btn">+ Add Transaction</button>
                     </div>
                 </div>
@@ -350,6 +352,7 @@
         </div>
     </div>
 
+    {% if OPTIONS_TRACKER_URL %}
     <!-- MODAL: OPTION DELIVERIES (ASSIGNMENTS & EXERCISES) -->
     <div class="modal-overlay" id="deliveries-modal">
         <div class="modal-content modal-content-wide">
@@ -413,6 +416,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Script Application Logic -->
     <script id="active-brokers-data" type="application/json">
