@@ -6,10 +6,17 @@ resources:
   - ingress.yaml
 images:
   - name: registry.home/portfolio-manager:placeholder
-    newName: portfolio-manager-portfolio-manager
+    newName: registry.home/portfolio-manager
     newTag: latest
 patches:
   - path: patch-storage.yaml
     target:
       kind: Deployment
       name: portfolio-manager
+  - target:
+      kind: Deployment
+      name: portfolio-manager
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
