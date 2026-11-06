@@ -54,6 +54,13 @@ def configure_logging() -> None:
     for noisy in ("yfinance", "urllib3", "httpx", "peewee", "hpack", "httpcore"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
+    # Disable InsecureRequestWarning when querying internal self-signed endpoints with verify=False
+    try:
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    except Exception:
+        pass
+
     # Re-enable all loggers that might have been disabled by dictConfig
     for name, log in logging.Logger.manager.loggerDict.items():
         if isinstance(log, logging.Logger):
