@@ -246,11 +246,11 @@
     // 4. Highlight global header nav links
     const basePath = window.BASE_PATH || "";
     headerLinks.forEach(link => {
-        if (link.classList.contains('nav-dropdown-toggle') || link.getAttribute('href') === '#') {
+        if (link.classList.contains('nav-dropdown-toggle') || link.getAttribute('href') === '#' || link.classList.contains('service-link') || link.target === '_blank') {
             link.classList.remove('active');
             return;
         }
-        if (link.closest('.nav-add-container') || link.search.includes('add=')) {
+        if (link.closest('.nav-add-container') || link.closest('#nav-services-dropdown') || link.search.includes('add=')) {
             link.classList.remove('active');
             return;
         }
