@@ -1,49 +1,63 @@
-# Use an official Python runtime as a parent image
-FROM python:3.12-slim
+# ==========================================
+# Stage 1: Build & Dependency Resolver
+# ==========================================
+FROM python:3.12-slim AS builder
 
-# Set the working directory in the container
-WORKDIR /app
+WORKDIR /build
 
-# Install system dependencies needed for python-multipart and compiling certain packages
+# Install compilation toolchain needed for Python package builds
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker layer caching
 COPY requirements.txt .
 
-# Install python packages
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies into an isolated prefix
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Create non-root user (appuser:1000)
+
+# ==========================================
+# Stage 2: Hardened Minimal Runtime Image
+# ==========================================
+FROM python:3.12-slim AS runtime
+
+# 1. Apply OS security patches (fixes zlib1g) and purge default packaging tools (eliminates pip CVEs)
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* && \
+    python -m pip uninstall -y pip setuptools wheel 2>/dev/null || true && \
+    rm -rf /usr/local/lib/python3.12/ensurepip /usr/local/bin/pip*
+
+# 2. Copy pre-built application dependencies from builder
+COPY --from=builder /install /usr/local
+
+# 3. Create non-root user (appuser:1000)
 RUN groupadd -g 1000 appuser && \
     useradd -u 1000 -g appuser -s /bin/bash -m appuser
 
-# Copy the application code into the container
+WORKDIR /app
+
+# 4. Copy application source code with non-root ownership
 COPY --chown=appuser:appuser . /app
 
+# 5. Make patch scripts executable
 RUN find /app/patching -type f -name "*.sh" -exec chmod +x {} +
 
-# Create directory for persistent sqlite and cache volume mounting
+# 6. Ensure persistent data directory exists with appuser ownership
 RUN mkdir -p /app/data && \
     chown -R appuser:appuser /app
 
-# Switch to non-root user
 USER appuser
 
-# Expose port 8080
 EXPOSE 8080
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PORTFOLIO_DB_FILE=/app/data/portfolio.db
-ENV exchange_rates_file=/app/data/exchange_rates.json
-ENV exchange_rates_max_poll_hours=6
-ENV exchange_rates_decimals=4
-ENV BASE_PATH=""
-ENV LOG_LEVEL=INFO
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PORTFOLIO_DB_FILE=/app/data/portfolio.db \
+    exchange_rates_file=/app/data/exchange_rates.json \
+    exchange_rates_max_poll_hours=6 \
+    exchange_rates_decimals=4 \
+    BASE_PATH="" \
+    LOG_LEVEL=INFO
 
-# Run the FastAPI server
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--log-config", "log_config.json"]
-

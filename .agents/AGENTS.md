@@ -19,3 +19,6 @@
     - Patch bump (1.0.0 -> 1.0.1) for fix:, chore:, refactor:, or configuration edits.
 - SemVer Tag Only: The VERSION file strictly sets the container image tag and is decoupled from git tags.
 - Stage and commit the updated VERSION file together with your code changes.
+
+# Vulnerability Patching
+after fixing vulnerabilities, run a local trivy scan using `../services/local-trivy-scanner/scan.sh --build {path to current repo}` to verify
