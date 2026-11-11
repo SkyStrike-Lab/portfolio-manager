@@ -41,12 +41,12 @@ spec:
           volumeMounts:
             - name: portfolio-data
               mountPath: /app/data
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 20
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: 8080
+          #   initialDelaySeconds: 15
+          #   periodSeconds: 20
           readinessProbe:
             httpGet:
               path: /
