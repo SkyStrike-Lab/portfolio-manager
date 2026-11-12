@@ -6,6 +6,7 @@ metadata:
     app: portfolio-manager
 spec:
   replicas: 1
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
       app: portfolio-manager
