@@ -21,4 +21,4 @@
 - Stage and commit the updated VERSION file together with your code changes.
 
 ## Vulnerability Patching
-after fixing vulnerabilities, run a local trivy scan using `../services/local-trivy-scanner/scan.sh --build {path to current repo}` to verify
+after fixing vulnerabilities, run a local trivy scan using `../services/local-trivy-scanner/scan.sh -o ./trivy-scan --build {path to current repo}` to verify

@@ -36,3 +36,4 @@ tasks/
 
 sync-agent-branch.sh
 sync-branch.sh
+**/trivy-scan/
