@@ -7,11 +7,12 @@ logger = logging.getLogger(__name__)
 DB_FILE = os.getenv("PORTFOLIO_DB_FILE", "data/portfolio.db")
 
 def get_connection():
-    """Returns a connection to the SQLite database with foreign keys enabled."""
+    """Returns a connection to the SQLite database with foreign keys and busy timeout enabled."""
     if os.path.dirname(DB_FILE):
         os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=5.0)
     conn.execute("PRAGMA foreign_keys = ON;")
+    conn.execute("PRAGMA busy_timeout = 5000;")
     # Return rows as dict-like objects for easier JSON serialization
     conn.row_factory = sqlite3.Row
     return conn
@@ -204,6 +205,7 @@ def init_db():
     """
     conn = get_connection()
     try:
+        conn.execute("PRAGMA journal_mode = WAL;")
         with conn:
             conn.executescript(schema)
 

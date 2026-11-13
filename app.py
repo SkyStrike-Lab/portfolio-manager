@@ -37,9 +37,10 @@ async def hourly_rebuild_loop():
         try:
             await asyncio.sleep(3600)
             logger.info("[cron/hourly] Triggering hourly dashboard cache refresh...")
-            clear_dashboard_cache()
-            get_cached_view("portfolio_active.html", "intraday", force=True)
-            get_cached_view("portfolio_active.html", "closing", force=True)
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, clear_dashboard_cache)
+            await loop.run_in_executor(None, lambda: get_cached_view("portfolio_active.html", "intraday", force=True))
+            await loop.run_in_executor(None, lambda: get_cached_view("portfolio_active.html", "closing", force=True))
             logger.info("[cron/hourly] Hourly dashboard refresh complete.")
         except asyncio.CancelledError:
             break
