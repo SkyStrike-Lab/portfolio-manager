@@ -138,7 +138,7 @@ async function initApp() {
     
     // Detect page route for default tabs and redirect constraints
     const isControlCenterPage = window.location.pathname.includes("control-center");
-    const controlCenterTabs = ["settings", "import", "imports", "capital", "dailycash", "maintenance"];
+    const controlCenterTabs = ["operations", "operation", "sync", "settings", "import", "imports", "capital", "dailycash", "maintenance"];
     const tradesTabs = ["transactions", "trades", "dividends", "tickers"];
     
     // Check URL parameters for quick add request, portfolio action, or tab selection on load
@@ -173,8 +173,8 @@ async function initApp() {
         }
     }
 
-    let initialNav = isControlCenterPage ? "nav-settings" : "nav-transactions";
-    let initialSec = isControlCenterPage ? "section-settings" : "section-transactions";
+    let initialNav = isControlCenterPage ? "nav-operations" : "nav-transactions";
+    let initialSec = isControlCenterPage ? "section-operations" : "section-transactions";
 
     if (tabParam) {
         if (tabParam === "settings") {
