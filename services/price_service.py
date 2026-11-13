@@ -221,7 +221,7 @@ def update_prices(conn: sqlite3.Connection = None, force: bool = True, cache_min
         logger.info("Fetching updates from yfinance for %d tickers...", len(yf_symbols))
         
         # Fetch 5 days of history in batch (5d ensures we get previous closes even over weekends)
-        df = yf.download(yf_symbols, period="5d", threads=False, progress=False)
+        df = yf.download(yf_symbols, period="5d", threads=False, progress=False, auto_adjust=False)
         
         # Check if download succeeded and df is not empty
         if df.empty or 'Close' not in df:
@@ -281,7 +281,7 @@ def update_prices(conn: sqlite3.Connection = None, force: bool = True, cache_min
         if failed_symbols:
             logger.info("Retrying %d failed tickers with period='1d': %s", len(failed_symbols), failed_symbols)
             try:
-                df_retry = yf.download(failed_symbols, period="1d", interval="1d", threads=False, progress=False)
+                df_retry = yf.download(failed_symbols, period="1d", interval="1d", threads=False, progress=False, auto_adjust=False)
                 if df_retry.empty or 'Close' not in df_retry:
                     df_retry = None
             except Exception as retry_ex:

@@ -269,7 +269,12 @@ def refetch_price_history_date(symbol: str, date: str):
         start_dt = dt - timedelta(days=1)
         
         ticker_obj = yf.Ticker(yf_symbol)
-        df = ticker_obj.history(start=start_dt.strftime("%Y-%m-%d"), end=next_dt.strftime("%Y-%m-%d"), interval="1d")
+        df = ticker_obj.history(
+            start=start_dt.strftime("%Y-%m-%d"),
+            end=next_dt.strftime("%Y-%m-%d"),
+            interval="1d",
+            auto_adjust=False,
+        )
         
         if df.empty:
             raise HTTPException(status_code=404, detail=f"No yfinance market data found for {symbol} around {date}")
@@ -282,7 +287,9 @@ def refetch_price_history_date(symbol: str, date: str):
                 break
                 
         if matched_row is None:
-            matched_row = df.iloc[0]
+            # Illiquid stocks may have no bar on the exact date; fall back to most recent prior bar
+            prior_rows = [row for idx_dt, row in df.iterrows() if idx_dt.strftime("%Y-%m-%d") <= date]
+            matched_row = prior_rows[-1] if prior_rows else df.iloc[0]
             
         o_val = round(float(matched_row["Open"]), 3)
         h_val = round(float(matched_row["High"]), 3)
