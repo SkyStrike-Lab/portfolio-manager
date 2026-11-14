@@ -1,6 +1,6 @@
 # Self-Hosted Portfolio Manager
 
-A self-hosted, lightweight investment portfolio manager built with a Python (FastAPI + SQLite) backend and a modern HTML5 + Vanilla CSS + JS frontend.
+A self-hosted, lightweight investment portfolio manager built with a Python (FastAPI + SQLite) backend and a modern HTML5 + Vanilla CSS + JS / Vue 3 frontend.
 
 ### 🎯 Project Origins & Intention
 This tracker originally started as a simple tool to monitor cash flows and dividend distributions, focusing on custom asset groupings for **thematic plays** or for consolidated tracking of **stocks with multiple tickers** (e.g. mapping single-stock ETFs alongside their actual underlying equities and/or ADRs in a single view).
@@ -11,7 +11,7 @@ Over time, the project evolved into a full-featured dashboard. The codebase heav
 
 ## 🔒 Environment & Security Context
 
-This project is architected strictly for a **private, single-user local network environment**. It is **not** designed or audited to be exposed to the public internet or hosted in a multi-tenant environment. 
+This project is architected strictly for a **private, single-user local network environment**. It is **not** designed or audited to be exposed to the public internet or hosted in a multi-tenant environment.
 
 To maintain lightweight development and simple administrative operations, certain functionalities are intentionally permissive:
 * **Dynamic Database Patching**: The patching module dynamically imports and executes Python scripts directly from the `patching/` directory based on local JSON manifest instructions.
@@ -59,65 +59,61 @@ No authentication, CSRF validation, or multi-user access controls are implemente
 
 ### Running Tests (Containerized)
 
-Automated unit tests (`tests/`) cover core financial calculations, SQLite configuration, and CSV ingestion:
+Automated unit tests (`tests/`) cover core financial math, SQLite configuration, and CSV ingestion:
 ```bash
 docker build --target builder -t portfolio-manager-test .
 docker run --rm -v "$(pwd)":/app -w /app -e PYTHONPATH=/app:/install/lib/python3.12/site-packages portfolio-manager-test sh -c "pip install --no-cache-dir -q -r requirements-dev.txt && pytest -v"
 ```
- 
 
 ---
 
 ## 🚀 Key Features
 
 * **Multi-Portfolio & Combined Net Worth**: Consolidated overview ("My Net Worth") alongside individual broker/portfolio segments with customizable sorting priorities.
-* **Interactive Transaction & Dividend Ledger**: A dynamic management interface (`trades.html`) for editing, deleting, or manually inputting historical stock transactions and dividend distributions.
-* **FIFO Financial Calculation Engine**: Calculates FIFO cost basis, capital gains (realized P&L), and rolls transaction data into 12-month charts and net/gross dividend aggregates in SGD.
-* **Interactive Dividend Calendar**: Grid/List monthly visualization (`/dividend-calendar`) with calendar views, monthly totals, search filters, and Interactive Brokers (IBKR) statement synchronization.
-* **IBKR Statement Reconciliation**: Automatically compares database positions against uploaded IBKR statement positions (`ib_data.json`) to display mismatch warnings and sync badges.
+* **Interactive Transaction & Dividend Ledger**: Dynamic management interface (`/trades`) for editing, deleting, or manually inputting historical stock transactions and dividend distributions.
+* **FIFO Financial Calculation Engine**: Calculates cost basis, realized P&L (native + historical FX-adjusted SGD), stock splits, and 12-month net/gross dividend aggregates.
+* **Interactive Dividend Calendar**: Grid/List monthly visualization (`/dividend-calendar`) with calendar views, monthly totals, search filters, and IBKR statement synchronization.
+* **IBKR Statement Reconciliation**: Compares database positions against uploaded IBKR statement positions (`ib_data.json`) to display mismatch warnings and sync badges.
 * **Options & Stress-Testing Dashboards**: Integrates with external options trackers to visualize active contracts, risk exposure metrics, expiration profiles, and cash stress tests.
-* **Option Deliveries (Assignments & Exercises) Sync**: Interactive modal on the Trades Ledger to fetch option assignments and exercises from Options Tracker (`/api/deliveries`), review trade details, select target portfolios, and import stock executions with effective basis pricing and database-enforced zero-duplicate guarantees.
-* **Dynamic Database Backups, Operations & Patching**: Admin tools in Control Center for managing database backups, hot-restoring databases, triggering administrative price refreshes (bypassing exchange session rules), and running custom patching manifests.
-* **Smart & Synchronous Yahoo Finance Batch Ingestion**: Fetches prices in single batches using `yfinance` with market-session open/closed awareness, 15-minute intraday caching, and synchronous UI execution for immediate screen updates.
-* **Price History Gap-Filling & Bulk Overrides**: Interactive date-level price editor on the dashboard and bulk JSON history override imports (`/api/prices/import-history`) in Control Center to backfill missing bars or adjust illiquid securities with manual protection (`is_manual = 1`).
-* **Transaction Visualizer (TX Visualizer)**: View per-ticker historical stock price candlestick charts (7d, 1m, 3m, 6m, YTD, 1y, 5y, all, and custom date range) overlaying your historical buy/sell trade executions directly on the price curve, with interactive tooltips showing trades and 3-decimal OHLC data.
+* **Option Deliveries (Assignments & Exercises) Sync**: Interactive modal on the Trades Ledger to fetch option deliveries from Options Tracker (`/api/deliveries`), select target portfolios, and import stock executions at effective basis pricing with duplicate protection.
+* **Control Center (Operations, Capital, Cash, Configuration & System Admin)**: Unified hub (`/control-center`) for administrative price refreshes, bulk price history imports, base capital & daily cash tracking, runtime settings overrides, database backups/hot-restores, and manifest-driven patching.
+* **Smart & Synchronous Yahoo Finance Batch Ingestion**: Fetches prices in batches using `yfinance` (`auto_adjust=False`) with market-session awareness, 15-minute intraday caching, and synchronous UI updates.
+* **Price History Gap-Filling & Bulk Overrides**: Date-level price editor on the dashboard and bulk JSON history override imports (`/api/prices/import-history`) to backfill missing bars or adjust illiquid securities with manual protection (`is_manual = 1`).
+* **Transaction Visualizer (TX Visualizer)**: Per-ticker candlestick charts (`7d`, `1m`, `3m`, `6m`, `YTD`, `1y`, `5y`, `all`, and custom ranges) overlaying buy/sell executions with 3-decimal OHLC tooltips.
 * **Tag Exposure & Analytics (`/tags`)**: Custom asset tagging and portfolio weight/exposure breakdown across holdings.
-* **Fixed Deposit Comparison (`/fd-comparison`)**: Simulates how deployed capital would have performed in fixed-rate deposits versus actual portfolio returns.
+* **Fixed Deposit Comparison (`/fd-comparison`)**: Simulates deployed capital performance in fixed-rate deposits versus actual portfolio returns.
+* **Position Calculator Widget**: Floating multi-ticker comparison drawer on the dashboard to simulate buys/sells, projected portfolio weights, within-stock trim %, and enforced lot sizes (`100` for SG/CA, `1` for US) with 1-click `Max` liquidation.
 
 ---
 
-## ⚙️ Configuration & Environment Variables
-
-The application can be configured using environment variables (e.g., in `docker-compose.yml`) or via settings inside `config/config.json` (defaults) or `data/config.json` (user overrides).
+## ⚙️ Configuration & Supplementary Data Files
 
 ### Configuration Overrides Priority
-To support dynamic configurations and user-specific customizations:
-1. **Database settings table overrides**: Custom configurations stored in the SQLite database (e.g., `sorting.classification_priority`, `external_services.options_tracker_url`, `external_services.backtester_url`) take the highest priority. These can be easily updated via the **Configuration** tab in the **Control Center**.
-2. **`data/config.json`** overrides (falls back to `config/config.json` default templates).
+1. **Database settings table overrides**: Custom configurations stored in SQLite (e.g., `sorting.classification_priority`, `external_services.options_tracker_url`, `external_services.backtester_url`), editable via **Control Center → Configuration**.
+2. **`data/config.json`** overrides (falls back to `config/config.json` defaults).
 
-If you want to customize your setup, simply place/upload your custom files into `data/`. For full details on all runtime and static configuration keys, see the [Settings & Configuration Guide](docs/settings_configuration.md) and [JSON Data Files Reference](docs/data_files.md).
+See the [Settings & Configuration Guide](docs/settings_configuration.md) and [JSON Data Files Reference](docs/data_files.md) for all keys and schemas.
 
 ### Environment Variables
-* `BASE_PATH`: Set this (e.g. `/portfolio`) to host the application under a custom prefix path. All internal endpoints, client-side fetch commands, header links, and script references will adapt dynamically.
-* `PORTFOLIO_DB_FILE`: File path for the SQLite database.
+* `BASE_PATH`: Sub-path prefix for reverse-proxy hosting (e.g. `/portfolio`).
+* `PORTFOLIO_DB_FILE`: File path for the SQLite database (defaults to `data/portfolio.db`).
 * `IB_DATA_FILE`: Custom file path for the IBKR position report (defaults to `data/ib_data.json`).
-* `exchange_rates_file`: File path for exchange rate caches.
+* `exchange_rates_file`: File path for exchange rate caches (defaults to `data/exchange_rates.json`).
 
-### Dynamic Upload Configuration (`config/config.json`)
-The types of files allowed for upload are stored dynamically in [config/config.json](config/config.json). You can add or modify allowed targets on the fly without restarting or rebuilding the container. Note that file uploads for configurations are written directly to `data/` so they remain untracked:
+### Supplementary Data Files & Upload Targets
+Allowed upload targets are configured dynamically under `"allowed_documents"` in [`config/config.json`](config/config.json) (writes go to `data/` so they remain untracked):
 
-```json
-  "allowed_documents": {
-    "stock-options": "data/stock-options.json",
-    "ib-data": "data/ib_data.json"
-  }
-```
+| File Path | Description / Purpose | If Missing / Default |
+| :--- | :--- | :--- |
+| **`data/config.json`** | User overrides for conversion rates, themes, and allowed upload targets. | Falls back to **`config/config.json`**. |
+| **`data/ib_data.json`** | IBKR position & balance report (`NetLiquidation`, `GrossPositionValue`, `TotalCashValue`). | Reconciliation badges skipped; cash reports use DB only. |
+| **`data/stock-options.json`** | Fallback options positions cache when `options_tracker_url` is offline. | Options panels omitted if neither API nor cache exists. |
 
 ---
 
 ## 🔌 External Services Integration
 
-The application integrates with external services configured under the `"external_services"` key in `config/config.json` (or `data/config.json` overrides):
+Configured under `"external_services"` in `config/config.json` (or overridden in **Control Center → Configuration**):
 
 ```json
   "external_services": {
@@ -127,135 +123,47 @@ The application integrates with external services configured under the `"externa
   }
 ```
 
-### 1. Options Tracker Service (`options_tracker_url`)
-* **Repository**: https://github.com/SkyStrike/options-tracker
-* **Purpose**: Fetches active options contracts, strategy legs, assignment risk, premium metrics, and delivery executions (assignments and exercises).
-* **Configured Behavior**:
-  * The dashboard builder requests live options positions from this endpoint (`/api/positions`).
-  * Displays the **Active Open Options** table.
-  * Calculates and renders the **Risk & Liquidity Analysis** sections (Options Exposure & Risk, Cash Stress Test, Portfolio Stress Test, Expiration Profile).
-  * Appends option P/L data to the main card header (**"Daily Performance & Options Unrealized"**).
-  * **Option Deliveries**: Provides the data source for the Trades Ledger **Option Deliveries** review modal (`/api/deliveries`), allowing 1-click import of option assignments (BUY) and exercises (SELL) booked at **Effective Basis** (`strike - option_premium`).
-  * **Fallback**: If the endpoint is offline or times out, the backend falls back to the local `data/stock-options.json` file cache (if available).
-* **Unconfigured/Empty Behavior**:
-  * Setting this URL to `""` or omitting it completely disables options tracking.
-  * All options tables, exposure/risk metrics cards, and stress tests are completely hidden from the user interface.
-  * The header card fallback behaves cleanly, displaying only **"Daily Performance"**.
-
-### 2. Backtesting Service (`backtester_url`)
-* **Repository**: https://github.com/SkyStrike/backtester
-* **Purpose**: Links underlying assets from the dashboard to a historical backtesting engine.
-* **Configured Behavior**:
-  * Renders a direct backtest link (🔗) next to the header of each underlying asset group.
-  * Clicking the link redirects to the backtest service with tickers and date boundaries pre-populated in the query parameters:
-    `http://yui.home/backtester/?tickers=QQCL.TO,HYLD-U.TO&startDate=2025-01-01&endDate=2026-06-20`
-  * The tickers are automatically converted to their respective `yfinance` formats.
-  * The `startDate` defaults to the earliest transaction date recorded for the underlying group.
-* **Unconfigured/Empty Behavior**:
-  * Setting this URL to `""` or omitting it disables the backtester links. No link icons are shown next to the underlying assets.
-
-### 3. Transaction OCR Service (`transaction_ocr_url`)
-* **Purpose**: External OCR service for processing trade confirmations and statements.
-* **Configured Behavior**:
-  * Displays a direct link to the transaction OCR service under the **Services** top navigation dropdown menu across all pages.
-* **Unconfigured/Empty Behavior**:
-  * Setting this URL to `""` or omitting it removes the link from the **Services** dropdown (and hides the Services menu if no other services are configured).
-
----
-
-## 🖩 Interactive Utilities
-
-### 1. Position Calculator Widget
-The application includes a comparative multi-ticker **Position Calculator** that floats at the bottom-right of the dashboard:
-* **Side-by-Side Comparison**: Open multiple ticker columns at once to simulate price and transaction size variations.
-* **Capital Flow Direction**: Color-coded and signed transacted amounts (outflows/buys are negative red, inflows/sells are positive green).
-* **Denominator Adjustment**: Automatically adjusts the total portfolio market value denominator by the sum of all transacted values for true projected weightage.
-* **Within-Stock Trimming %**: Computes and displays the change percentage within the individual asset to visualize trim ratios (e.g. `-25%` trim).
-* **Enforced Lot Guidances**: Enforces a minimum lot size of `100` for Singapore/Canadian listings, and `1` for standard US stocks.
-* **Max Populate Shortkey**: Click the `Max: -[qty]` link next to the lot guide to instantly populate the simulated shares input field for full liquidations.
-
----
-
-## 📂 Project Structure
-
-The project has been refactored into a modern, modular architecture:
-
-* [app.py](app.py): Entrypoint file serving the FastAPI REST API, registering modular sub-routers, and scheduling background loops.
-* **`core/`**: Core databases, calculations, cache layers, and schemas.
-  - [core/database.py](core/database.py): SQLite database schema definition, settings and option_deliveries tables, and migrations (no default portfolios are seeded; the database starts completely clean).
-  - [core/calculations.py](core/calculations.py): FIFO cost-basis matching calculations, realized P&L, and currency conversions.
-  - [core/models.py](core/models.py): Object representations for portfolios, positions, and trades.
-  - [core/cache.py](core/cache.py): Handles in-memory dashboard rendering caches.
-  - [core/dashboard_builder.py](core/dashboard_builder.py): Base metrics aggregator for dashboard compilation.
-  - [core/performance_calculator.py](core/performance_calculator.py): Performance metrics and cash assets daily calculator.
-  - [core/schemas.py](core/schemas.py): Pydantic validation schemas for API endpoints.
-  - [core/logging_config.py](core/logging_config.py): Logging configuration and warning suppression for internal endpoints.
-  - [core/migrations.py](core/migrations.py): Alembic database migration runner (migration scripts in `migrations/`).
-* **`services/`**: Command-line tools, background integrations, and rendering pipelines.
-  - [services/rebuild_dashboard.py](services/rebuild_dashboard.py): Dashboard builder orchestration. Builds and populates the in-memory JSON cache consumed by SPA REST endpoints.
-  - [services/price_service.py](services/price_service.py): Manages Yahoo Finance updates.
-  - [services/fetch_exchange_rates.py](services/fetch_exchange_rates.py): Central bank exchange rates pull services.
-  - [services/dividend_service.py](services/dividend_service.py): Syncs upcoming dividend ex-dates and estimates distributions.
-  - [services/dividend_calendar_service.py](services/dividend_calendar_service.py): Formats schedules and compiles dividend calendar JSON.
-  - [services/performance_report_service.py](services/performance_report_service.py): Builds historical performance report datasets.
-  - [services/fd_simulator.py](services/fd_simulator.py): Fixed deposit return comparison simulator.
-* **`ingestion/`**: Data parsing and intake pipelines.
-  - [ingestion/importer.py](ingestion/importer.py): Parses Holdings and Transactions CSV exports.
-* **`routers/`**: Decoupled, modular controller endpoints:
-  - [routers/views.py](routers/views.py): Single Page Application dashboard shell view routing.
-  - [routers/prices.py](routers/prices.py): Price history queries, bulk price history override imports (`/api/prices/import-history`), manual bar gap-filling, date-level overrides, and yfinance price refreshes.
-  - [routers/dashboard.py](routers/dashboard.py): REST payload streaming for active, closed, history, and performance views.
-  - [routers/dividends.py](routers/dividends.py): Dividend transactions management and IBKR flex report ingestion.
-  - [routers/portfolios.py](routers/portfolios.py): Portfolio creation, updates, and classification management.
-  - [routers/tickers.py](routers/tickers.py): Ticker metadata updates, tax rates, and friendly name assignments.
-  - [routers/transactions.py](routers/transactions.py): Trade transaction CRUD operations and cost basis recalculations.
-  - [routers/deliveries.py](routers/deliveries.py): Option deliveries query and trade import endpoints with deduplication.
-  - [routers/reports.py](routers/reports.py): Cash metrics, capital entries, FD comparison, and dividend calendar endpoints.
-  - [routers/settings.py](routers/settings.py): Runtime settings and configuration endpoints.
-  - [routers/uploads.py](routers/uploads.py): Dynamic JSON document upload endpoints (`stock-options`, `ib-data`).
-  - [routers/api_v1.py](routers/api_v1.py): System parameters, brokers, and settings endpoints.
-  - [routers/patches.py](routers/patches.py): Maintenance patch execution engine, database backup/restore, and IBKR webhook triggers.
-* **`tests/`**: Automated `pytest` unit test suite for financial math, SQLite configuration, and CSV ingestion.
-* **`templates/`**: Single Page Application views and HTML component templates:
-  - [templates/spa_shell.html](templates/spa_shell.html): Unified SPA shell layout, Vue 3 root instance, and modal dialogs.
-  - [templates/control_center.html](templates/control_center.html): Administrative dashboard for settings, data imports, database backups, and maintenance operations.
-  - [templates/trades.html](templates/trades.html): Interactive trade transaction ledger and execution management.
-  - **`templates/spa/`**: Component views (`active_holdings.html`, `daily_change_modal.html`, etc.).
-* **`static/`**: Client-side styling and scripts:
-  - **`static/css/style.css`**: Design tokens, component styles, and glassmorphism layouts.
-  - **`static/js/app.js`**: Administrative Control Center application scripts.
-  - **`static/js/spa_app.js`**: Core Single Page Application Vue 3 instance and interactive state.
-
----
-
-## 🗃️ Supplementary Data Files
-
-The system relies on supplemental data files (typically placed in the `/data` or `/config` directory) to enrich calculations and coordinate settings.
-
-| File Path | Description / Purpose | Usage & Behavior | If Missing / Default |
-| :--- | :--- | :--- | :--- |
-| **`data/config.json`** | Application parameters (conversion rates, color schemes, allowed uploads). | Loaded on startup and UI render. Primary config. | Falls back to **`config/config.json`**. |
-| **`data/ib_data.json`** | Broker position report containing actual holdings size, cost basis, and balances (NetLiquidation, GrossPositionValue, TotalCashValue) for IBKR. | Used for stock reconciliation (`IB Sync` badge / `IB Mismatch` warning) and cash reporting. | Reconciliation checks are skipped; cash reports default to database-only. |
+* **Options Tracker Service (`options_tracker_url`)** ([GitHub](https://github.com/SkyStrike/options-tracker)): Powers **Active Open Options**, **Risk & Liquidity Analysis**, option P/L in the dashboard header, and **Option Deliveries** import (`/api/deliveries`). Falls back to `data/stock-options.json` if offline; hidden completely when unconfigured.
+* **Backtesting Service (`backtester_url`)** ([GitHub](https://github.com/SkyStrike/backtester)): Adds direct backtest links (🔗) on underlying asset headers with pre-populated `yfinance` tickers and start dates; hidden when unconfigured.
+* **Transaction OCR Service (`transaction_ocr_url`)**: Adds a direct link under the **Services** navbar dropdown; hidden when unconfigured.
 
 ---
 
 ## 📖 User Guides & Documentation
 
-Additional step-by-step documentation guides are available in the [docs/](docs/) directory:
+### Setup & Configuration
+* **[Settings & Configuration Guide](docs/settings_configuration.md)**: Runtime precedence, SQLite settings overrides, external service URLs, and webhooks.
+* **[JSON Data Files Reference](docs/data_files.md)**: Catalog and JSON schemas for system configurations and IBKR caches.
+* **[Metadata Configuration Guide](docs/metadata_config.md)**: Custom portfolio classifications and broker setup.
 
-1. **[Data Migration Guide](docs/data_migration.md)**: Exporting portfolios from Snowball Analytics and importing them.
-2. **[IBKR Dividend & Verification Guide](docs/ibkr_dividend_import.md)**: Accruals integration, XML flex imports, position reconciliation, and custom API requests.
-3. **[Metadata Configuration Guide](docs/metadata_config.md)**: Setting custom classifications and brokers.
-4. **[File Upload API Guide](docs/file_uploads.md)**: Uploading stock-options, ib-data, and ibkr-dividends data files with upload verification details.
-5. **[Position Calculator Guide](docs/position_calculator.md)**: Simulating transactions, lot-size restrictions, cashflows, and dynamic weightage calculations.
-6. **[Daily Weekday Metrics Job Guide](docs/daily_metrics_job.md)**: Background daily updates, 6 AM SGT cron scheduling, cache pre-warming, and manual overrides.
-7. **[IBKR Data File Guide](docs/ib_data_guide.md)**: Information regarding formatting, uploading, and external cron ingestion setups for `ib_data.json`.
-8. **[System Maintenance & Patching Guide](docs/patching.md)**: Exposing database backups, hot-restores, manifest parameter configuration schema, and writing custom Python patch modules.
-9. **[Broker Capital CSV Guide](docs/capital_csv.md)**: Managing and importing capital records for returns tracking.
-10. **[JSON Data Files Reference](docs/data_files.md)**: Catalog and structural JSON schemas for system configurations and IBKR inventory caches.
-11. **[Advanced Scripting & API Guide](docs/advanced_scripting.md)**: Custom automation scripts, programmatic database pre-warming triggers, RESTful schema lookups, and interactive Swagger UI configurations.
-12. **[Illiquid Stock & Price History Guide](docs/illiquid_stock_price_update.md)**: Managing illiquid security prices, manual bar gap-filling, date-level overrides, and Closing vs Intraday P&L behavior.
-13. **[Settings & Configuration Guide](docs/settings_configuration.md)**: Runtime configuration precedence, SQLite settings overrides, external service URLs, and webhook setup.
+### Importing & Broker Sync
+* **[Data Migration Guide](docs/data_migration.md)**: Exporting portfolios from Snowball Analytics and importing them.
+* **[Broker Capital CSV Guide](docs/capital_csv.md)**: Managing and importing base capital injection records.
+* **[IBKR Data File Guide](docs/ib_data_guide.md)**: Formatting, uploading, and cron ingestion for `ib_data.json`.
+* **[IBKR Dividend & Verification Guide](docs/ibkr_dividend_import.md)**: Accruals integration, XML flex imports, and reconciliation.
+* **[File Upload API Guide](docs/file_uploads.md)**: Uploading `stock-options` and `ib-data` JSON files via API.
+
+### Market Data & Features
+* **[Illiquid Stock & Price History Guide](docs/illiquid_stock_price_update.md)**: Manual bar gap-filling, bulk JSON overrides (`tmp/history.json`), date-level overrides, and Closing vs Intraday P&L.
+* **[Daily Weekday Metrics Job Guide](docs/daily_metrics_job.md)**: Automated 6 AM SGT weekday sync, cache pre-warming, and manual daily cash entry.
+* **[Position Calculator Guide](docs/position_calculator.md)**: Simulating trades, lot-size rules, cashflows, and projected weightages.
+
+### Maintenance & Automation
+* **[System Maintenance & Patching Guide](docs/patching.md)**: Database backups, hot-restores, manifest schemas, and custom Python patch scripts.
+* **[Advanced Scripting & API Guide](docs/advanced_scripting.md)**: Automation scripts, pre-warming triggers, and REST/Swagger integration.
+
+---
+
+## 📂 Project Structure
+
+* **[`app.py`](app.py)**: FastAPI entrypoint, router registration, `BASE_PATH` mounting, and background cron loops.
+* **`core/`**: SQLite connection & schema ([`database.py`](core/database.py)), Alembic runner ([`migrations.py`](core/migrations.py)), financial math ([`calculations.py`](core/calculations.py), [`performance_calculator.py`](core/performance_calculator.py)), caching ([`cache.py`](core/cache.py)), models, and Pydantic schemas.
+* **`services/`**: Dashboard builder ([`rebuild_dashboard.py`](services/rebuild_dashboard.py)), Yahoo Finance ingestion ([`price_service.py`](services/price_service.py)), FX rates, dividend calendar/sync, performance reports, and FD simulator.
+* **`routers/`**: Modular FastAPI endpoints (`views`, `dashboard`, `transactions`, `dividends`, `prices`, `portfolios`, `tickers`, `deliveries`, `reports`, `settings`, `uploads`, `patches`, `api_v1`).
+* **`ingestion/`**: Snowball CSV portfolio & transaction importer ([`importer.py`](ingestion/importer.py)).
+* **`migrations/` & `patching/`**: Alembic schema migrations and manifest-driven data patch scripts.
+* **`templates/` & `static/`**: Vue 3 SPA dashboard shell (`spa_shell.html`, `spa_app.js`) and Ledger/Control Center views (`trades.html`, `control_center.html`, `app.js`).
+* **`tests/`**: Containerized `pytest` unit test suite.
 
 ---
 
