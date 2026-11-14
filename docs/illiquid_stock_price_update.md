@@ -49,7 +49,7 @@ Users can manage price history entries directly from the dashboard:
 
 For securities that need historical OHLC price bars backfilled in bulk (e.g., from an external historical JSON export):
 
-1. Navigate to **Control Center** $\rightarrow$ **Maintenance** tab.
+1. Navigate to **Control Center** $\rightarrow$ **Operations** tab.
 2. Locate the **📈 Bulk Import Price History Overrides** section.
 3. Input options:
    - **Upload File**: Select a `.json` file directly from your computer.
@@ -85,7 +85,7 @@ The import payload expects a JSON object mapping ticker symbols to an array of b
   ]
 }
 ```
-*Note: `open`, `high`, and `low` fields are optional. If omitted, they default to `close`.*
+*Note: `open`, `high`, and `low` fields are optional. If omitted, `open` defaults to `close`, `high` defaults to `max(open, close)`, and `low` defaults to `min(open, close)`.*
 
 ### Import Logic & Deduplication Rules:
 * **Symbol Normalization**: Automatically converts dot notation to hyphens (e.g., `AMHE.U` $\rightarrow$ `AMHE-U`).

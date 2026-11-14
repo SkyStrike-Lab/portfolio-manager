@@ -188,7 +188,7 @@ The application includes a system to execute custom data repair or patching scri
        # Access DB connection, perform data manipulation, etc.
        print(f"Running custom patch with params: {params}")
    ```
-3. **Execute**: Trigger execution from the Control Center GUI **Maintenance** panel or trigger it programmatically via `POST /api/patches/run`.
+3. **Execute**: Trigger execution from the Control Center GUI **System Admin** tab or trigger it programmatically via `POST /api/patches/run`.
 
 ---
 

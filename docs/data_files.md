@@ -58,7 +58,7 @@ This document provides a detailed catalog of the various JSON configuration, cac
 
 #### Finance Parameters
 * **`finance.max_workers`** (integer): Sets the maximum number of concurrent threads/workers utilized by the background `yfinance` price updates. Higher values fetch tickers in parallel faster but can cause rate-limiting issues.
-* **`finance.conversion_rates`** (object): Historical fallback conversion rates relative to SGD. *Note: Active exchange rates are dynamically fetched, tracked, and stored in the database `fx_rates` table. See [Settings & System Configuration Reference](settings_configuration.md) for details.*
+* **`finance.conversion_rates`** (object): Historical fallback conversion rates relative to SGD. *Note: Active exchange rates are dynamically fetched, tracked, and stored in the database `exchange_rates` table. See [Settings & System Configuration Reference](settings_configuration.md) for details.*
 
 #### UI Customization (Legacy)
 > [!NOTE]

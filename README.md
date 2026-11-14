@@ -5,7 +5,7 @@ A self-hosted, lightweight investment portfolio manager built with a Python (Fas
 ### 🎯 Project Origins & Intention
 This tracker originally started as a simple tool to monitor cash flows and dividend distributions, focusing on custom asset groupings for **thematic plays** or for consolidated tracking of **stocks with multiple tickers** (e.g. mapping single-stock ETFs alongside their actual underlying equities and/or ADRs in a single view).
 
-Over time, the project evolved into a full-featured dashboard. The codebase heavily favors **Interactive Brokers (IBKR)** integration because it is my primary brokerage account and supports easy API connectivity using the `ib_async` library. The system also supports manual entries and CSV sheets for other brokers like **Moomoo**, though full API automation is not implemented for them due to limitations with their official SDKs.
+Over time, the project evolved into a full-featured dashboard. The codebase heavily favors **Interactive Brokers (IBKR)** integration because it is my primary brokerage account; automated IBKR statement/data fetching is handled by private companion services using the `ib_async` library (kept private/unexposed because they manage real-money brokerage credentials), while this service consumes their exported reports and webhook triggers. The system also supports manual entries and CSV sheets for other brokers like **Moomoo**, though full API automation is not implemented for them due to limitations with their official SDKs.
 
 ---
 
@@ -53,9 +53,17 @@ No authentication, CSRF validation, or multi-user access controls are implemente
    ```
 3. Start the Uvicorn development server:
    ```bash
-   uvicorn app:main_app --host 127.0.0.1 --port 8080 --reload
+   uvicorn app:app --host 127.0.0.1 --port 8080 --reload
    ```
 4. Open your browser and navigate to `http://127.0.0.1:8080`.
+
+### Running Tests (Containerized)
+
+Automated unit tests (`tests/`) cover core financial calculations, SQLite configuration, and CSV ingestion:
+```bash
+docker build --target builder -t portfolio-manager-test .
+docker run --rm -v "$(pwd)":/app -w /app -e PYTHONPATH=/app:/install/lib/python3.12/site-packages portfolio-manager-test sh -c "pip install --no-cache-dir -q -r requirements-dev.txt && pytest -v"
+```
  
 
 ---
@@ -73,6 +81,8 @@ No authentication, CSRF validation, or multi-user access controls are implemente
 * **Smart & Synchronous Yahoo Finance Batch Ingestion**: Fetches prices in single batches using `yfinance` with market-session open/closed awareness, 15-minute intraday caching, and synchronous UI execution for immediate screen updates.
 * **Price History Gap-Filling & Bulk Overrides**: Interactive date-level price editor on the dashboard and bulk JSON history override imports (`/api/prices/import-history`) in Control Center to backfill missing bars or adjust illiquid securities with manual protection (`is_manual = 1`).
 * **Transaction Visualizer (TX Visualizer)**: View per-ticker historical stock price candlestick charts (7d, 1m, 3m, 6m, YTD, 1y, 5y, all, and custom date range) overlaying your historical buy/sell trade executions directly on the price curve, with interactive tooltips showing trades and 3-decimal OHLC data.
+* **Tag Exposure & Analytics (`/tags`)**: Custom asset tagging and portfolio weight/exposure breakdown across holdings.
+* **Fixed Deposit Comparison (`/fd-comparison`)**: Simulates how deployed capital would have performed in fixed-rate deposits versus actual portfolio returns.
 
 ---
 
@@ -82,7 +92,7 @@ The application can be configured using environment variables (e.g., in `docker-
 
 ### Configuration Overrides Priority
 To support dynamic configurations and user-specific customizations:
-1. **Database settings table overrides**: Custom configurations stored in the SQLite database (e.g., `sorting.classification_priority`, `external_services.options_tracker_url`, `external_services.backtester_url`) take the highest priority. These can be easily updated via the **Settings** editor tab in the Admin Dashboard.
+1. **Database settings table overrides**: Custom configurations stored in the SQLite database (e.g., `sorting.classification_priority`, `external_services.options_tracker_url`, `external_services.backtester_url`) take the highest priority. These can be easily updated via the **Configuration** tab in the **Control Center**.
 2. **`data/config.json`** overrides (falls back to `config/config.json` default templates).
 
 If you want to customize your setup, simply place/upload your custom files into `data/`. For full details on all runtime and static configuration keys, see the [Settings & Configuration Guide](docs/settings_configuration.md) and [JSON Data Files Reference](docs/data_files.md).
@@ -179,12 +189,16 @@ The project has been refactored into a modern, modular architecture:
   - [core/dashboard_builder.py](core/dashboard_builder.py): Base metrics aggregator for dashboard compilation.
   - [core/performance_calculator.py](core/performance_calculator.py): Performance metrics and cash assets daily calculator.
   - [core/schemas.py](core/schemas.py): Pydantic validation schemas for API endpoints.
+  - [core/logging_config.py](core/logging_config.py): Logging configuration and warning suppression for internal endpoints.
+  - [core/migrations.py](core/migrations.py): Alembic database migration runner (migration scripts in `migrations/`).
 * **`services/`**: Command-line tools, background integrations, and rendering pipelines.
   - [services/rebuild_dashboard.py](services/rebuild_dashboard.py): Dashboard builder orchestration. Builds and populates the in-memory JSON cache consumed by SPA REST endpoints.
   - [services/price_service.py](services/price_service.py): Manages Yahoo Finance updates.
   - [services/fetch_exchange_rates.py](services/fetch_exchange_rates.py): Central bank exchange rates pull services.
   - [services/dividend_service.py](services/dividend_service.py): Syncs upcoming dividend ex-dates and estimates distributions.
   - [services/dividend_calendar_service.py](services/dividend_calendar_service.py): Formats schedules and compiles dividend calendar JSON.
+  - [services/performance_report_service.py](services/performance_report_service.py): Builds historical performance report datasets.
+  - [services/fd_simulator.py](services/fd_simulator.py): Fixed deposit return comparison simulator.
 * **`ingestion/`**: Data parsing and intake pipelines.
   - [ingestion/importer.py](ingestion/importer.py): Parses Holdings and Transactions CSV exports.
 * **`routers/`**: Decoupled, modular controller endpoints:
@@ -196,8 +210,12 @@ The project has been refactored into a modern, modular architecture:
   - [routers/tickers.py](routers/tickers.py): Ticker metadata updates, tax rates, and friendly name assignments.
   - [routers/transactions.py](routers/transactions.py): Trade transaction CRUD operations and cost basis recalculations.
   - [routers/deliveries.py](routers/deliveries.py): Option deliveries query and trade import endpoints with deduplication.
+  - [routers/reports.py](routers/reports.py): Cash metrics, capital entries, FD comparison, and dividend calendar endpoints.
+  - [routers/settings.py](routers/settings.py): Runtime settings and configuration endpoints.
+  - [routers/uploads.py](routers/uploads.py): Dynamic JSON document upload endpoints (`stock-options`, `ib-data`).
   - [routers/api_v1.py](routers/api_v1.py): System parameters, brokers, and settings endpoints.
   - [routers/patches.py](routers/patches.py): Maintenance patch execution engine, database backup/restore, and IBKR webhook triggers.
+* **`tests/`**: Automated `pytest` unit test suite for financial math, SQLite configuration, and CSV ingestion.
 * **`templates/`**: Single Page Application views and HTML component templates:
   - [templates/spa_shell.html](templates/spa_shell.html): Unified SPA shell layout, Vue 3 root instance, and modal dialogs.
   - [templates/control_center.html](templates/control_center.html): Administrative dashboard for settings, data imports, database backups, and maintenance operations.
@@ -237,6 +255,7 @@ Additional step-by-step documentation guides are available in the [docs/](docs/)
 10. **[JSON Data Files Reference](docs/data_files.md)**: Catalog and structural JSON schemas for system configurations and IBKR inventory caches.
 11. **[Advanced Scripting & API Guide](docs/advanced_scripting.md)**: Custom automation scripts, programmatic database pre-warming triggers, RESTful schema lookups, and interactive Swagger UI configurations.
 12. **[Illiquid Stock & Price History Guide](docs/illiquid_stock_price_update.md)**: Managing illiquid security prices, manual bar gap-filling, date-level overrides, and Closing vs Intraday P&L behavior.
+13. **[Settings & Configuration Guide](docs/settings_configuration.md)**: Runtime configuration precedence, SQLite settings overrides, external service URLs, and webhook setup.
 
 ---
 

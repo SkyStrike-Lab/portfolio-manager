@@ -49,7 +49,7 @@ If the `ib_data.json` file is not present in the `data/` directory during the sc
 * **The Job Continues**: The daily metrics job will skip the cash balance database ingestion step cleanly without throwing errors or halting.
 * **No Database Record Formed**: No new cash metrics record is created in the database for that day.
 * **Pricing & Views Still Run**: The price sync, upcoming dividends update, and HTML cache pre-warming procedures will still execute normally.
-* **Manual Workaround Available**: The user can still record the metrics manually for that day via the **Control Center -> Settings** panel in the GUI.
+* **Manual Workaround Available**: The user can still record the metrics manually for that day via the **Control Center -> Daily Cash** tab in the GUI.
 
 ---
 

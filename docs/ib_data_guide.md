@@ -146,6 +146,6 @@ If you choose not to supply the `ib_data.json` file, the Portfolio Manager will 
 3. **Daily Cash Metrics Ignored**: The daily scheduled metrics job will skip cash-history ingestion for IBKR portfolios.
 
 > [!NOTE]
-> Even if `ib_data.json` is missing or not configured, you can still manually record or upload historical cash balances (including Net Liquidation, Gross Position Value, and Cash on Hand) for any date and broker (including IBKR) directly via the **Control Center -> Settings** manual override panels in the GUI.
+> Even if `ib_data.json` is missing or not configured, you can still manually record or upload historical cash balances (including Net Liquidation, Gross Position Value, and Cash on Hand) for any date and broker (including IBKR) directly via the **Control Center -> Daily Cash** manual override panels in the GUI.
 
 

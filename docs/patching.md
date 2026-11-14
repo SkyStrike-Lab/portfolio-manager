@@ -12,7 +12,7 @@ The application supports hot-swap backups and restores using SQLite's native `sq
 * **Zero Restarts:** The database connection layer (`core/database.py`) opens and closes file handles on a per-request basis. Because no long-lived global database connections are held in application memory, backups and restores can be performed instantly on a running container without requiring process or container restarts.
 * **Storage Location:** All backup files are stored within the persistent `/app/data/` volume on the container, ending in the `.db` extension (e.g. `data/backup_2026_07.db`).
 
-### UI Operations (Control Center > Maintenance)
+### UI Operations (Control Center > System Admin)
 * **Create Backup:** Input a target backup filename. The system will copy all pages of the active database into the backup file. If the file already exists, it is overwritten.
 * **List Backups:** Discovers all `.db` files in the data directory (excluding the active database).
 * **Download Backup:** Allows direct downloading of the backup file to your local computer.
@@ -24,7 +24,7 @@ The application supports hot-swap backups and restores using SQLite's native `sq
 
 ## 2. System & Data Operations
 
-Located inside **Control Center > Maintenance > System & Data Operations**:
+Located inside **Control Center > Operations > Market Data & Automation Sync**:
 * **⚡ Administrative Price Refresh**: Triggers `POST /api/prices/refresh?force=true`. Bypasses all market session open/closed rules and cache timestamps to force an immediate `yfinance` download for all active holdings.
 * **🔄 Rebuild Dashboard Cache**: Triggers `POST /api/dashboard/rebuild-spa?sync=true`. Recalculates metrics, position weights, cash summaries, and ApexCharts data, re-caching in-memory JSON views.
 
