@@ -130,6 +130,15 @@ Bulk imports historical OHLC price bars from a multipart file upload or server f
     "inserted": 20,
     "affected_symbols": ["AMHE-U", "NVDA"],
     "unknown_tickers": [],
+    "details": [
+      {
+        "symbol": "AMHE-U",
+        "date": "2026-07-24",
+        "action": "overridden",
+        "old_close": 10.60,
+        "new_close": 10.75
+      }
+    ],
     "details_sample": [
       {
         "symbol": "AMHE-U",

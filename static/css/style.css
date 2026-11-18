@@ -789,12 +789,20 @@ tr.child-row td:first-child {
     justify-content: space-between;
     align-items: center;
 }
+.maintenance-console-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 .maintenance-console-clear-btn {
     background: none;
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
     font-size: 0.8rem;
+}
+.maintenance-console-clear-btn:hover {
+    color: var(--text-primary);
 }
 .operations-console-pre {
     background: #000;

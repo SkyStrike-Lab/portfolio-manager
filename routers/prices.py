@@ -704,6 +704,7 @@ async def import_price_history(
             "overridden": overridden,
             "inserted": inserted,
             "unknown_tickers": sorted(list(unknown_tickers)),
+            "details": details_log,
             "details_sample": details_log[:50]
         }
 

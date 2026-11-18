@@ -4449,9 +4449,10 @@ window.handleAdminImportPriceHistory = async function(dryRun = false) {
                 if (data.unknown_tickers && data.unknown_tickers.length > 0) {
                     log += `  Ignored unknown tickers: ${data.unknown_tickers.join(", ")}\n`;
                 }
-                if (data.details_sample && data.details_sample.length > 0) {
-                    log += `  Sample updates (${data.details_sample.length}):\n`;
-                    data.details_sample.slice(0, 15).forEach(d => {
+                const affectedRecords = data.details || data.details_sample || [];
+                if (affectedRecords.length > 0) {
+                    log += `  Affected records (${affectedRecords.length}):\n`;
+                    affectedRecords.forEach(d => {
                         if (d.action === "overridden") {
                             log += `    • ${d.symbol} ${d.date}: ${d.old_close} -> ${d.new_close} (overridden)\n`;
                         } else {
@@ -4478,4 +4479,28 @@ window.handleAdminImportPriceHistory = async function(dryRun = false) {
             btn.innerText = originalText;
         }
     }
+};
+
+window.downloadOperationsLogs = function() {
+    const consolePre = document.getElementById("patch-console-pre");
+    const content = consolePre ? consolePre.textContent : "";
+    if (!content.trim()) {
+        showToast("No logs available to download.", "error");
+        return;
+    }
+
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const filename = `operations-activity-${timestamp}.log`;
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 };

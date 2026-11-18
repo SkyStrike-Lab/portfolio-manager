@@ -420,7 +420,10 @@
                         <div class="table-header-row maintenance-card-title" style="margin-bottom: 0;">
                             <span>🖥️ Activity & Execution Logs</span>
                         </div>
-                        <button id="btn-clear-logs" class="maintenance-console-clear-btn" onclick="document.getElementById('patch-console-pre').textContent = 'Console cleared.'">Clear logs</button>
+                        <div class="maintenance-console-actions">
+                            <button id="btn-download-logs" class="maintenance-console-clear-btn" onclick="downloadOperationsLogs()">Download logs</button>
+                            <button id="btn-clear-logs" class="maintenance-console-clear-btn" onclick="document.getElementById('patch-console-pre').textContent = 'Console cleared.'">Clear logs</button>
+                        </div>
                     </div>
                     <pre id="patch-console-pre" class="operations-console-pre">Console ready. Operations activity logs (price imports, cache rebuilds, and IBKR triggers) will stream here.</pre>
                 </div>
