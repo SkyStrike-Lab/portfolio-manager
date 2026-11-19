@@ -427,9 +427,15 @@ def get_broker_summary_report(year: int | None = None, price_mode: str = Query("
             consolidated["dividends_net_sgd"] += b_info["dividends_net_sgd"]
             consolidated["stock_total_returns_sgd"] += b_info["stock_total_returns_sgd"]
 
-        # If a CONSOLIDATED cash report row existed for this historical year (total net worth snapshot),
+        # If a CONSOLIDATED cash report row exists and is at least as recent as the latest
+        # per-broker IBKR snapshot (e.g. legacy 2025 year-end before per-broker tracking began),
         # use its authoritative total liquidation value and adjust primary broker (IBKR) accordingly.
-        if consolidated_row and consolidated_row.get("liquidation_value") is not None:
+        ibkr_cash_date = (cash_rows.get('IBKR') or {}).get("date")
+        if (
+            consolidated_row
+            and consolidated_row.get("liquidation_value") is not None
+            and (not ibkr_cash_date or consolidated_row.get("date", "") >= ibkr_cash_date)
+        ):
             total_legacy_liq = round(float(consolidated_row["liquidation_value"]), 2)
             # Find other brokers' liquidation
             other_liq = sum(b["liquidation_value_sgd"] for br, b in brokers_data.items() if br.upper() != 'IBKR')
