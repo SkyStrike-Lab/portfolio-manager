@@ -1491,7 +1491,7 @@ const { createApp } = Vue;
                     },
                     yaxis: {
                         labels: {
-                            formatter: (val) => val == null ? '' : (metric === 'pct' ? `${val.toFixed(1)}%` : self.formatCompactCurrency(val))
+                            formatter: (val) => self.safeFormatChartVal(val, metric)
                         }
                     },
                     annotations: {
