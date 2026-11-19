@@ -5120,4 +5120,22 @@ body.mask-values .sensitive-value::after {
     font-size: 0.9rem;
 }
 
+.spa-perf-note {
+    margin: 0.75rem 0 1rem 0;
+    padding: 0.65rem 1rem;
+    border-radius: 6px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.spa-cross-year-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+
 

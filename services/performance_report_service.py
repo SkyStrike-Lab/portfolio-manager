@@ -11,6 +11,11 @@ def slugify(text):
 def build_chart_data(years, cash_data, portfolio_data, broker_cash_data=None, daily_cash_series=None, daily_broker_cash_series=None):
     raw_chart = {
         "cash": {},
+        "cash_cross_year": {
+            "weekly": {"dates": [], "values": [], "pcts": []},
+            "monthly": {"dates": [], "values": [], "pcts": []},
+            "yearly": {"dates": [], "values": [], "pcts": []},
+        },
         "portfolio": {},
         "broker_cash": {}
     }
@@ -111,7 +116,53 @@ def build_chart_data(years, cash_data, portfolio_data, broker_cash_data=None, da
                     "mtm_val": [r2(y_data.get(m, {}).get("mtm", {}).get("base_capital_gains_val")) for m in range(1, 13)],
                     "mtm_pct": [r2(y_data.get(m, {}).get("mtm", {}).get("base_capital_gains_pct")) for m in range(1, 13)]
                 }
-            
+
+    # 4. Cross-year Combined Net Worth Cumulative Base Capital Gains (weekly, monthly, yearly)
+    sorted_years = sorted(years)
+    all_daily = []
+    for y in sorted_years:
+        all_daily.extend((daily_cash_series or {}).get(y, []))
+    all_daily.sort(key=lambda x: x["date"])
+
+    # Weekly cross-year (last available snapshot per ISO week)
+    cross_weeks = {}
+    for r in all_daily:
+        try:
+            dt_obj = datetime.strptime(r["date"], "%Y-%m-%d")
+            iso_yr, iso_wk, _ = dt_obj.isocalendar()
+            cross_weeks[(iso_yr, iso_wk)] = r
+        except Exception:
+            pass
+    for r in sorted(cross_weeks.values(), key=lambda x: x["date"]):
+        try:
+            label = datetime.strptime(r["date"], "%Y-%m-%d").strftime("%d %b '%y")
+        except Exception:
+            label = r["date"]
+        raw_chart["cash_cross_year"]["weekly"]["dates"].append(label)
+        raw_chart["cash_cross_year"]["weekly"]["values"].append(r2(r.get("gains")))
+        raw_chart["cash_cross_year"]["weekly"]["pcts"].append(r2(r.get("gains_pct")))
+
+    # Monthly & Yearly cross-year
+    month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    for y in sorted_years:
+        y_data = cash_data.get(y, {})
+        last_month_entry = None
+        for m in range(1, 13):
+            m_entry = y_data.get(m)
+            if not m_entry or m_entry.get("base_capital_gains") is None:
+                continue
+            gains = m_entry.get("base_capital_gains") or 0.0
+            cap = m_entry.get("base_capital") or 0.0
+            pct = (gains / cap * 100) if cap > 0 else 0.0
+            raw_chart["cash_cross_year"]["monthly"]["dates"].append(f"{month_names[m - 1]} '{str(y)[-2:]}")
+            raw_chart["cash_cross_year"]["monthly"]["values"].append(r2(gains))
+            raw_chart["cash_cross_year"]["monthly"]["pcts"].append(r2(pct))
+            last_month_entry = (gains, pct)
+        if last_month_entry is not None:
+            raw_chart["cash_cross_year"]["yearly"]["dates"].append(str(y))
+            raw_chart["cash_cross_year"]["yearly"]["values"].append(r2(last_month_entry[0]))
+            raw_chart["cash_cross_year"]["yearly"]["pcts"].append(r2(last_month_entry[1]))
+
     return raw_chart
 
 

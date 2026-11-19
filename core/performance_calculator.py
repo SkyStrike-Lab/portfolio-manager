@@ -147,14 +147,20 @@ def get_performance_report_data(db_path):
                 "cash_on_hand": sum(latest_metrics[br].get("cash_on_hand") or 0.0 for br in active_brokers)
             }
         cash_rows.append(consolidated)
-        daily_cash_series[y].append({"date": dt, "gains": liq_val - base_cap})
+        gains = liq_val - base_cap
+        gains_pct = (gains / base_cap * 100) if base_cap > 0 else 0.0
+        daily_cash_series[y].append({"date": dt, "gains": gains, "gains_pct": gains_pct})
 
-        # Track per-broker daily series
-        for br in active_brokers:
-            br_rec = rows_by_date_broker.get((dt, br)) or latest_metrics.get(br, {})
-            br_liq = br_rec.get("liquidation_value") or 0.0
-            br_cap = get_base_capital_for_date(dt, br)
-            daily_broker_series[br][y].append({"date": dt, "gains": br_liq - br_cap})
+        # Track per-broker daily series only from 2026-06-29 onward on dates with actual broker rows
+        if dt >= "2026-06-29":
+            for br in active_brokers:
+                if (dt, br) in rows_by_date_broker:
+                    br_rec = rows_by_date_broker[(dt, br)]
+                    br_liq = br_rec.get("liquidation_value") or 0.0
+                    br_cap = get_base_capital_for_date(dt, br)
+                    br_gains = br_liq - br_cap
+                    br_gains_pct = (br_gains / br_cap * 100) if br_cap > 0 else 0.0
+                    daily_broker_series[br][y].append({"date": dt, "gains": br_gains, "gains_pct": br_gains_pct})
     
     # Group and aggregate portfolio metrics by date and classification/portfolio name on the fly
     aggregated_metrics = defaultdict(lambda: {"total_invested": 0.0, "current_value": 0.0, "total_returns": 0.0})
@@ -425,12 +431,12 @@ def get_performance_report_data(db_path):
             m_idx = int(month_str[5:7])
             portfolio_by_class_year_month[cls][y][m_idx] = summary
             
-    # Calculate separate YTD and monthly metrics for each broker
+    # Calculate separate YTD and monthly metrics for each broker (from 2026-06-29 when per-broker tracking began)
     # Group raw cash rows by broker and month
     broker_cash_by_month = defaultdict(lambda: defaultdict(list))
     for r in raw_cash_rows:
         br = r['broker'].upper()
-        if br == 'CONSOLIDATED':
+        if br == 'CONSOLIDATED' or r['date'] < "2026-06-29":
             continue
         month = r['date'][:7]
         broker_cash_by_month[br][month].append(r)

@@ -61,6 +61,8 @@ const { createApp } = Vue;
                 spaCashChartModes: {},
                 spaCumulativeChartModes: {},
                 spaPortfolioChartModes: {},
+                spaCrossYearGranularity: 'monthly',
+                spaCrossYearMetric: 'val',
 
                 // Fixed Deposit Comparison fields
                 fdData: null,
@@ -1260,6 +1262,10 @@ const { createApp } = Vue;
                         const selectedYear = this.perfSelectedYear;
                         if (!selectedYear) return;
 
+                        if (activeTab === 'cash') {
+                            this.renderCrossYearCashChart();
+                        }
+
                         if (activeTab === 'cash' || activeTab.startsWith('cash-')) {
                             let chartDataSource = null;
                             let brokerName = null;
@@ -1461,6 +1467,62 @@ const { createApp } = Vue;
                         }
                     });
                 }
+            },
+            renderCrossYearCashChart() {
+                const crossData = this.perfData?.chart_data?.cash_cross_year?.[this.spaCrossYearGranularity];
+                const el = document.getElementById('spa-chart-cash-cross-year');
+                if (!el || !crossData) return;
+
+                const self = this;
+                const metric = this.spaCrossYearMetric;
+                const seriesData = metric === 'pct' ? (crossData.pcts || []) : (crossData.values || []);
+                const categories = crossData.dates || [];
+                const showLabels = this.spaCrossYearGranularity === 'yearly' || (this.spaCrossYearGranularity === 'monthly' && categories.length <= 24);
+                const lineWidth = this.spaCrossYearGranularity === 'weekly' ? 2.5 : 3;
+                const seriesLabel = metric === 'pct' ? 'Cumulative Base Capital Gains (%)' : 'Cumulative Base Capital Gains (S$)';
+
+                const options = {
+                    chart: { type: 'line', height: 350, background: 'transparent', toolbar: { show: false } },
+                    theme: { mode: 'dark' },
+                    series: [{ name: seriesLabel, data: seriesData }],
+                    xaxis: {
+                        categories,
+                        tickAmount: this.spaCrossYearGranularity === 'weekly' ? 12 : undefined
+                    },
+                    yaxis: {
+                        labels: {
+                            formatter: (val) => val == null ? '' : (metric === 'pct' ? `${val.toFixed(1)}%` : self.formatCompactCurrency(val))
+                        }
+                    },
+                    annotations: {
+                        yaxis: [{ y: 0, borderColor: 'rgba(148, 163, 184, 0.35)', strokeDashArray: 4 }]
+                    },
+                    stroke: { curve: 'smooth', width: lineWidth },
+                    colors: ['#2ecc71'],
+                    dataLabels: {
+                        enabled: showLabels,
+                        formatter: (v) => self.safeFormatChartVal(v, metric)
+                    },
+                    tooltip: { y: { formatter: (v) => self.safeFormatChartVal(v, metric) } }
+                };
+
+                const existing = window.spaPerfChartInstances?.['spa-chart-cash-cross-year'];
+                if (existing) {
+                    existing.updateOptions(options);
+                } else {
+                    const chart = new ApexCharts(el, options);
+                    chart.render();
+                    if (!window.spaPerfChartInstances) window.spaPerfChartInstances = {};
+                    window.spaPerfChartInstances['spa-chart-cash-cross-year'] = chart;
+                }
+            },
+            setSpaCrossYearGranularity(granularity) {
+                this.spaCrossYearGranularity = granularity;
+                this.renderCrossYearCashChart();
+            },
+            setSpaCrossYearMetric(metric) {
+                this.spaCrossYearMetric = metric;
+                this.renderCrossYearCashChart();
             },
             getSpaCashChartMode(tab, year) {
                 const key = `${tab}-${year}`;

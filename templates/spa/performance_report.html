@@ -127,6 +127,31 @@
                             </div>
                         </div>
                     </div>
+
+                    <div v-if="perfActiveTab.startsWith('cash-')" class="spa-perf-note">
+                        ℹ️ Per-broker cash tracking started on <strong>2026-06-29</strong>. Prior periods (2024 – 1H 2026) are tracked under <strong>Combined Net Worth</strong>.
+                    </div>
+
+                    <!-- Cross-Year Cumulative Base Capital Gains (Combined Net Worth only) -->
+                    <div v-if="perfActiveTab === 'cash' && perfData.chart_data && perfData.chart_data.cash_cross_year" class="dashboard-grid spa-chart-grid-margin">
+                        <div class="chart-container full-width">
+                            <div class="chart-controls">
+                                <h4>Cumulative Base Capital Gains (All Years)</h4>
+                                <div class="spa-cross-year-toggles">
+                                    <div>
+                                        <button class="toggle-btn" :class="{ active: spaCrossYearGranularity === 'weekly' }" @click="setSpaCrossYearGranularity('weekly')">Weekly</button>
+                                        <button class="toggle-btn" :class="{ active: spaCrossYearGranularity === 'monthly' }" @click="setSpaCrossYearGranularity('monthly')">Monthly</button>
+                                        <button class="toggle-btn" :class="{ active: spaCrossYearGranularity === 'yearly' }" @click="setSpaCrossYearGranularity('yearly')">Yearly</button>
+                                    </div>
+                                    <div>
+                                        <button class="toggle-btn" :class="{ active: spaCrossYearMetric === 'val' }" @click="setSpaCrossYearMetric('val')">Value</button>
+                                        <button class="toggle-btn" :class="{ active: spaCrossYearMetric === 'pct' }" @click="setSpaCrossYearMetric('pct')">%</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="spa-chart-cash-cross-year"></div>
+                        </div>
+                    </div>
                     
  <div class="year-nav-container spa-year-nav" >
                         <span class="year-nav-label">Select Year:</span>
