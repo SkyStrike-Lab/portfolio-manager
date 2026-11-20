@@ -3193,6 +3193,60 @@ const { createApp } = Vue;
                 await this.initializeDashboardCharts(true);
             });
 
+            // Bind live Gross/Share & Net/Share dividend calculation listeners for transaction_modal.html
+            const updateSpaDividendCalculations = () => {
+                const tabInput = document.getElementById("tx-tab");
+                if (tabInput && tabInput.value !== "incomes") return;
+
+                const amountInput = document.getElementById("div-amount");
+                const qtyInput = document.getElementById("div-qty");
+                const taxInput = document.getElementById("div-tax");
+                const taxRateInput = document.getElementById("div-tax-rate");
+                const divCalcContainer = document.getElementById("div-calc-container");
+                const grossShareSpan = document.getElementById("div-calc-gross-share");
+                const netShareSpan = document.getElementById("div-calc-net-share");
+
+                if (!amountInput || !qtyInput || !divCalcContainer) return;
+
+                const amount = parseFloat(amountInput.value);
+                const qty = parseFloat(qtyInput.value);
+
+                if (!isNaN(amount) && !isNaN(qty) && qty > 0) {
+                    const grossPerShare = amount / qty;
+
+                    let taxPaid = 0;
+                    const taxVal = (taxInput && taxInput.value !== undefined && taxInput.value !== null) ? taxInput.value.toString().trim() : "";
+                    if (taxVal !== "") {
+                        taxPaid = parseFloat(taxVal);
+                    } else {
+                        const taxRateVal = (taxRateInput && taxRateInput.value !== undefined && taxRateInput.value !== null) ? taxRateInput.value.toString().trim() : "";
+                        if (taxRateVal !== "") {
+                            taxPaid = amount * (parseFloat(taxRateVal) / 100);
+                        }
+                    }
+
+                    if (isNaN(taxPaid)) taxPaid = 0;
+                    const netPerShare = (amount - taxPaid) / qty;
+                    const currency = (document.getElementById("div-currency")?.value || "USD").toUpperCase();
+                    const sym = currency === "USD" ? "USD " : (currency === "CAD" ? "CAD " : "S$");
+                    const fmt = (v) => sym + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+
+                    if (grossShareSpan) grossShareSpan.textContent = fmt(grossPerShare);
+                    if (netShareSpan) netShareSpan.textContent = fmt(netPerShare);
+                } else {
+                    if (grossShareSpan) grossShareSpan.textContent = "-";
+                    if (netShareSpan) netShareSpan.textContent = "-";
+                }
+                divCalcContainer.style.display = "block";
+            };
+
+            ["div-amount", "div-qty", "div-tax", "div-tax-rate"].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener("input", updateSpaDividendCalculations);
+            });
+            const divCurrEl = document.getElementById("div-currency");
+            if (divCurrEl) divCurrEl.addEventListener("change", updateSpaDividendCalculations);
+
             // Bind transaction save button listener for "mark as received"
             const saveBtn = document.getElementById("btn-save-transaction");
             if (saveBtn) {
