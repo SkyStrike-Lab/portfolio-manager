@@ -2575,6 +2575,8 @@ function switchTab(tabName) {
     
     if (tabName === "trades") {
         updateTradeModalCalculations();
+    } else if (tabName === "incomes") {
+        updateDividendCalculations();
     }
     
     const isEditing = !!document.getElementById("tx-id").value;
