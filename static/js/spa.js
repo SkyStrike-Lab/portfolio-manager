@@ -1565,7 +1565,7 @@ function updateCalculatorCalculations() {
         // Canadian and Singapore lot size mapping
         const isCanadian = (t.currency === 'CAD' || t.exchange === 'TO' || t.exchange === 'V' || t.symbol.endsWith('.TO') || t.symbol.endsWith('.V') || t.symbol.includes('-U') || t.symbol.includes('.U'));
         const isSingapore = (t.currency === 'SGD' || t.exchange === 'SG' || t.symbol.endsWith('.SI'));
-        const lotSize = (isCanadian || isSingapore) ? 100 : 1;
+        const lotSize = isSingapore ? 10 : (isCanadian ? 100 : 1);
         
         const isLotViolated = t.simShares !== 0 && (t.simShares % lotSize !== 0);
 

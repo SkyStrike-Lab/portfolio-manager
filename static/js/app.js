@@ -2408,23 +2408,21 @@ window.deletePortfolio = async function(btnOrId, possibleId) {
 
 /* Unified Modal and Sorting Custom Additions */
 
+function getMinLotSize(exchange) {
+    if (exchange === "SG") return 10;
+    if (exchange === "TO" || exchange === "V" || exchange === "NE") return 100;
+    return 1;
+}
+
 function updateQuantityStepAndMin() {
     const exchangeSelect = document.getElementById("tx-exchange");
     const quantityInput = document.getElementById("tx-quantity");
     if (!exchangeSelect || !quantityInput) return;
     
-    const exchange = exchangeSelect.value;
-    const isCanadianOrSG = (exchange === "TO" || exchange === "V" || exchange === "NE" || exchange === "SG");
-    
-    if (isCanadianOrSG) {
-        quantityInput.step = "100";
-        quantityInput.min = "100";
-        quantityInput.placeholder = "Shares (Min 100)";
-    } else {
-        quantityInput.step = "1";
-        quantityInput.min = "1";
-        quantityInput.placeholder = "Shares";
-    }
+    const minLotSize = getMinLotSize(exchangeSelect.value);
+    quantityInput.step = String(minLotSize);
+    quantityInput.min = String(minLotSize);
+    quantityInput.placeholder = minLotSize > 1 ? `Shares (Min ${minLotSize})` : "Shares";
 }
 
 function checkExistingTicker(value, inputId) {
@@ -2661,8 +2659,7 @@ async function saveTransaction(closeModalOnSuccess = true) {
         }
         
         if (action === "BUY" || action === "SELL") {
-            const isCanadianOrSG = (exchangeVal === "TO" || exchangeVal === "V" || exchangeVal === "NE" || exchangeVal === "SG");
-            const minLotSize = isCanadianOrSG ? 100 : 1;
+            const minLotSize = getMinLotSize(exchangeVal);
             if (quantity < minLotSize) {
                 showToast(`Validation Error: Quantity must be at least ${minLotSize} for ${exchangeVal} exchange.`, "error");
                 return;

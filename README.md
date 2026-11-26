@@ -82,7 +82,7 @@ docker run --rm -v "$(pwd)":/app -w /app -e PYTHONPATH=/app:/install/lib/python3
 * **Transaction Visualizer (TX Visualizer)**: Per-ticker candlestick charts (`7d`, `1m`, `3m`, `6m`, `YTD`, `1y`, `5y`, `all`, and custom ranges) overlaying buy/sell executions with 3-decimal OHLC tooltips.
 * **Tag Exposure & Analytics (`/tags`)**: Custom asset tagging and portfolio weight/exposure breakdown across holdings.
 * **Fixed Deposit Comparison (`/fd-comparison`)**: Simulates deployed capital performance in fixed-rate deposits versus actual portfolio returns.
-* **Position Calculator Widget**: Floating multi-ticker comparison drawer on the dashboard to simulate buys/sells, projected portfolio weights, within-stock trim %, and enforced lot sizes (`100` for SG/CA, `1` for US) with 1-click `Max` liquidation.
+* **Position Calculator Widget**: Floating multi-ticker comparison drawer on the dashboard to simulate buys/sells, projected portfolio weights, within-stock trim %, and enforced lot sizes (`10` for SG, `100` for CA, `1` for US) with 1-click `Max` liquidation.
 
 ---
 

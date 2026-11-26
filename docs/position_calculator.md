@@ -53,7 +53,8 @@ Trims will display as a negative percentage colored **red** (e.g. `-25.00%`).
 ## 4. Lot Size Guidance Heuristics
 
 Minimum lot sizes are enforced based on asset listings and currencies:
-* **Canadian & Singapore Assets** (currency `CAD`/`SGD`, exchanges `TO`/`V`/`SG`, or suffixes `.TO`/`.V`/`.SI`/`.U`): Minimum lot size is **100** shares.
+* **Singapore Assets** (currency `SGD`, exchange `SG`, or suffix `.SI`): Minimum lot size is **10** shares.
+* **Canadian Assets** (currency `CAD`, exchanges `TO`/`V`, or suffixes `.TO`/`.V`/`.U`): Minimum lot size is **100** shares.
 * **US & Others**: Minimum lot size is **1** share.
 
 ### 4.1 Lot Size Warnings & Shortcuts
