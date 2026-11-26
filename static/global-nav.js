@@ -348,4 +348,104 @@
         });
     }
 
+    // Global Sensitive Values Masking (numbers/tables across all pages & dynamic SPA views)
+    const maskToggleBtn = document.getElementById("mask-toggle-btn");
+    const maskToggleIcon = document.getElementById("mask-toggle-icon");
+    if (maskToggleBtn && maskToggleIcon) {
+        const eyeIcon = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+        const eyeOffIcon = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`;
+
+        const currencySuffixRe = /^[+-]?[\d,]+\.?\d*\s*(SGD|USD|CAD|SG\$|US\$)$/;
+        const currencyPrefixRe = /^(SGD|USD|CAD|SG\$|US\$|S\$)\s*[+-]?[\d,]+\.?\d*$/;
+        const plainNumberRe = /^[+-]?[\d,]+\.?\d*$/;
+
+        function markSensitiveValues() {
+            // 1. KPI & card value elements
+            document.querySelectorAll('.stat-value, .stat-subvalue, .kpi-value, .kpi-subtext, .cal-metric-value, .toc-sublist-val, .spa-cell-stack-top, .spa-cell-stack-bottom').forEach(el => {
+                if (el.classList.contains('sensitive-value') || el.querySelector('button, a, input, select, .daily-change-clickable')) return;
+                const text = (el.textContent || '').trim();
+                if (!text || text === '-') return;
+                if ((text.includes('SGD') || text.includes('USD') || text.includes('CAD') || text.includes('SG$') || text.includes('US$') || text.includes('S$')) && !text.includes('%') && !text.includes('days')) {
+                    el.classList.add('sensitive-value');
+                } else if ((el.classList.contains('spa-cell-stack-top') || el.classList.contains('spa-cell-stack-bottom')) && plainNumberRe.test(text)) {
+                    el.classList.add('sensitive-value');
+                }
+            });
+
+            // 2. Formatted currency cells/spans
+            document.querySelectorAll('.pos-val, .neg-val, td').forEach(el => {
+                if (el.classList.contains('sensitive-value') || el.querySelector('button, a, input, select, .daily-change-clickable')) return;
+                const text = (el.textContent || '').trim();
+                if (!text) return;
+                if (currencySuffixRe.test(text) || currencyPrefixRe.test(text)) {
+                    el.classList.add('sensitive-value');
+                }
+            });
+
+            // 3. Holdings summary table numeric columns
+            document.querySelectorAll('table.holdings-summary tbody tr').forEach(row => {
+                const cells = row.children;
+                if (cells.length >= 9) {
+                    for (const idx of [3, 4, 5, 6, 7, 8]) {
+                        const cell = cells[idx];
+                        if (cell && !cell.classList.contains('sensitive-value') && !cell.querySelector('button, a')) {
+                            const text = cell.textContent.trim();
+                            if (text && text !== '-' && !text.includes('%')) {
+                                cell.classList.add('sensitive-value');
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 4. Generic summary, holdings, performance, and ledger tables (numeric cells excluding first label column)
+            document.querySelectorAll('table.summary-table tbody tr, table.holdings-table tbody tr, #trades-tbody tr, #dividends-tbody tr, #capital-entries-tbody tr, #daily-cash-history-body tr').forEach(row => {
+                Array.from(row.children).forEach((cell, idx) => {
+                    if (idx === 0 || cell.classList.contains('sensitive-value') || cell.querySelector('button, a, input, select')) return;
+                    const text = cell.textContent.trim();
+                    if (plainNumberRe.test(text) && !text.includes('%') && text.length > 1) {
+                        cell.classList.add('sensitive-value');
+                    }
+                });
+            });
+        }
+
+        let maskRafId = null;
+        function scheduleMaskScan() {
+            if (!document.body.classList.contains("mask-values") || maskRafId !== null) return;
+            maskRafId = requestAnimationFrame(() => {
+                maskRafId = null;
+                if (document.body.classList.contains("mask-values")) {
+                    markSensitiveValues();
+                }
+            });
+        }
+
+        function setMaskState(isMasked) {
+            if (isMasked) {
+                document.body.classList.add("mask-values");
+                maskToggleIcon.innerHTML = eyeOffIcon;
+                maskToggleBtn.title = "Show Sensitive Values";
+                markSensitiveValues();
+            } else {
+                document.body.classList.remove("mask-values");
+                maskToggleIcon.innerHTML = eyeIcon;
+                maskToggleBtn.title = "Hide Sensitive Values";
+            }
+            localStorage.setItem("dashboard_masked", isMasked ? "true" : "false");
+        }
+
+        // Observe DOM updates (SPA route switches, filters, async table loads) without observing attributes
+        const maskObserver = new MutationObserver(scheduleMaskScan);
+        maskObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+        const isMasked = localStorage.getItem("dashboard_masked") === "true";
+        setMaskState(isMasked);
+
+        maskToggleBtn.addEventListener("click", () => {
+            const currentlyMasked = document.body.classList.contains("mask-values");
+            setMaskState(!currentlyMasked);
+        });
+    }
+
 })();

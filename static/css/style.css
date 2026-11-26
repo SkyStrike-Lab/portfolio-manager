@@ -2574,11 +2574,15 @@ body.gateway-active .local-nav {
 }
 
 /* --- Sensitive Value Masking Styles --- */
-body.mask-values .sensitive-value {
+body.mask-values .sensitive-value,
+body.mask-values .sensitive-value * {
     color: transparent !important;
-    position: relative;
+    text-shadow: none !important;
     user-select: none;
-    pointer-events: none;
+}
+
+body.mask-values .sensitive-value {
+    position: relative;
 }
 
 body.mask-values .sensitive-value::after {
