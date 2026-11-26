@@ -646,10 +646,10 @@
                             <li v-for="u in cl.underlyings" :key="u.title">
                                 <a :href="'#' + slugify(u.title)" class="toc-item-link" v-text="u.title"></a>
                                 <span class="toc-item-stats">
-                                    Size: <span class="stat">{{ formatPct(getUnderlyingAllocPct(u)) }}, {{ formatCommas(u.curr) }} SGD</span> 
+                                    Size: <span class="stat">{{ formatPct(getUnderlyingAllocPct(u)) }}, <span class="sensitive-value">{{ formatCommas(u.curr) }} SGD</span></span> 
                                     (<span :class="getValClass(u.gl)">{{ formatPct(u.roi) }}</span>)
                                     <br>
-                                    Daily: <span :class="getValClass(u.daily_val)">{{ formatCommas(u.daily_val, true) }} SGD</span>
+                                    Daily: <span class="sensitive-value" :class="getValClass(u.daily_val)">{{ formatCommas(u.daily_val, true) }} SGD</span>
                                     (<span :class="[getValClass(u.daily_pct), { 'daily-change-clickable': u.symbols && u.symbols.length === 1 }]" @click="u.symbols && u.symbols.length === 1 ? openDailyChangeModal(u.symbols[0]) : null" :title="u.symbols && u.symbols.length === 1 ? 'Click to view daily change calculation breakdown' : ''">{{ formatPct(u.daily_pct) }}</span>)
                                 </span>
                                 <!-- Tickers sublist if symbols length > 1 (matching legacy) -->
@@ -673,12 +673,12 @@
                             <li>
                                 <span class="toc-item-link">Uninvested Cash Balances</span>
                                 <span class="toc-item-stats">
-                                    Size: <span class="stat">{{ formatPct(getCashAllocPct()) }}, {{ formatCommas((cashReport || summary.cash_report).cash_on_hand) }} SGD</span>
+                                    Size: <span class="stat">{{ formatPct(getCashAllocPct()) }}, <span class="sensitive-value">{{ formatCommas((cashReport || summary.cash_report).cash_on_hand) }} SGD</span></span>
                                 </span>
                                 <ul v-if="(cashReport || summary.cash_report).by_broker && Object.keys((cashReport || summary.cash_report).by_broker).length > 0" class="toc-sublist">
                                     <li v-for="(bData, bName) in (cashReport || summary.cash_report).by_broker" :key="bName">
                                         <span class="toc-sublist-link">{{ bName }} Cash</span>
-                                        <span class="toc-sublist-val">{{ formatPct((bData.cash_on_hand !== undefined ? bData.cash_on_hand : bData) / getHoldingsTotalDenominator() * 100) }} | {{ formatCommas(bData.cash_on_hand !== undefined ? bData.cash_on_hand : bData) }} SGD</span>
+                                        <span class="toc-sublist-val">{{ formatPct((bData.cash_on_hand !== undefined ? bData.cash_on_hand : bData) / getHoldingsTotalDenominator() * 100) }} | <span class="sensitive-value">{{ formatCommas(bData.cash_on_hand !== undefined ? bData.cash_on_hand : bData) }} SGD</span></span>
                                     </li>
                                 </ul>
                             </li>
