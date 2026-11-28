@@ -895,6 +895,18 @@ def fetch_cash_report_details(earliest_transaction_date):
             
         total_gains = total_liq - total_base
         total_gains_pct = (total_gains / total_base * 100) if total_base != 0 else 0.0
+
+        tracked_cash_brokers = {r['broker'].upper() for r in latest_records}
+        cursor.execute("""
+            SELECT broker, SUM(amount) as total_amt
+            FROM broker_capital_entries
+            GROUP BY UPPER(broker)
+        """)
+        excluded_cash_brokers = [
+            {"broker": r["broker"], "base_capital": round(r["total_amt"], 2)}
+            for r in cursor.fetchall()
+            if r["broker"] and r["broker"].upper() not in tracked_cash_brokers and abs(r["total_amt"] or 0.0) > 1e-6
+        ]
         
         cash_report = {
             "liquidation_value": total_liq,
@@ -904,7 +916,8 @@ def fetch_cash_report_details(earliest_transaction_date):
             "base_capital_gains": total_gains,
             "base_capital_gains_pct": total_gains_pct,
             "last_updated_date": last_updated_date,
-            "details": details
+            "details": details,
+            "excluded_cash_brokers": excluded_cash_brokers
         }
         
         try:

@@ -347,6 +347,13 @@
                     </div>
                 </div>
 
+                <div v-if="cashReport.excluded_cash_brokers && cashReport.excluded_cash_brokers.length > 0" class="spa-perf-note">
+                    ℹ️ <strong>Note:</strong> Cash Report excludes brokers without daily cash tracking:
+                    <span v-for="(eb, idx) in cashReport.excluded_cash_brokers" :key="eb.broker">
+                        <strong>{{ eb.broker }}</strong> ({{ formatCommas(eb.base_capital) }} SGD base capital)<span v-if="idx < cashReport.excluded_cash_brokers.length - 1">, </span>
+                    </span>.
+                </div>
+
                 <!-- Broker Breakdown Table Wrapper -->
                 <div id="cash-breakdown-wrapper" class="collapsed cash-breakdown-wrapper">
                     <div class="cash-breakdown-card">
