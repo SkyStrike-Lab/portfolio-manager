@@ -17,8 +17,9 @@
 - If a VERSION file exists in the repository root, bump the version whenever code or configuration changes are made:
     - Minor bump (1.0.0 -> 1.1.0) for feat:.
     - Patch bump (1.0.0 -> 1.0.1) for fix:, chore:, refactor:, or configuration edits.
+- Skip if already bumped in unpushed commits: Before bumping, check whether `VERSION` has already been modified in unpushed local commits (`git diff @{u}..HEAD -- VERSION`). If `VERSION` already differs from upstream, skip bumping again (unless a subsequent unpushed `feat:` requires upgrading an earlier unpushed patch bump to a minor bump).
 - SemVer Tag Only: The VERSION file strictly sets the container image tag and is decoupled from git tags.
-- Stage and commit the updated VERSION file together with your code changes.
+- Stage and commit the updated VERSION file (when bumped) together with your code changes.
 
 ## Vulnerability Patching
 after fixing vulnerabilities, run a local trivy scan using `../services/local-trivy-scanner/scan.sh -o ./trivy-scan --build {path to current repo}` to verify
