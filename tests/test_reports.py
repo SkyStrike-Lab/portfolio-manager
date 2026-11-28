@@ -64,6 +64,8 @@ def test_performance_report_cross_year_chart_and_per_broker_cutoff(db_conn):
         db_conn.execute("INSERT INTO portfolios (name, broker) VALUES ('Main IBKR', 'IBKR')")
         db_conn.execute("INSERT INTO broker_capital_entries (date, broker, amount) VALUES ('2024-12-01', 'IBKR', 50000.0)")
         db_conn.execute("INSERT INTO broker_capital_entries (date, broker, amount) VALUES ('2025-12-01', 'IBKR', 150000.0)")
+        # Untracked broker in daily_cash_report (should be excluded from Combined Net Worth base capital)
+        db_conn.execute("INSERT INTO broker_capital_entries (date, broker, amount) VALUES ('2026-06-01', 'SRS (DBS)', 7300.0)")
         # 2024 IBKR row (preserved in Combined Net Worth, excluded from per-broker tab)
         db_conn.execute(
             "INSERT INTO daily_cash_report (date, broker, liquidation_value, base_capital, total_stock_value, cash_on_hand) "
@@ -91,6 +93,8 @@ def test_performance_report_cross_year_chart_and_per_broker_cutoff(db_conn):
     assert "2025" in report["cash_data"]
     assert "2026" in report["cash_data"]
     assert report["cash_data"]["2025"][12]["base_capital_gains"] == pytest.approx(20000.0)
+    assert report["cash_data"]["2026"][7]["base_capital"] == pytest.approx(200000.0)
+    assert report["excluded_cash_brokers"] == [{"broker": "SRS (DBS)", "base_capital": 7300.0}]
 
     # Per-broker cash starts from 2026-06-29+ only
     assert "2024" not in report["broker_cash_data"].get("IBKR", {})

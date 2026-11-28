@@ -91,6 +91,7 @@ def get_performance_report(price_mode: str = Query("closing")):
         "portfolio_ytd": dict(data["portfolio_ytd"]),
         "broker_cash_data": data.get("broker_cash_data", {}),
         "broker_cash_ytd": data.get("broker_cash_ytd", {}),
+        "excluded_cash_brokers": data.get("excluded_cash_brokers", []),
         "chart_data": chart_data
     }
 

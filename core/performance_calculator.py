@@ -42,13 +42,29 @@ def get_performance_report_data(db_path):
     # Query capital entries to dynamically compute base capital
     cursor.execute("SELECT date, broker, amount FROM broker_capital_entries ORDER BY date ASC")
     capital_entries = [dict(row) for row in cursor.fetchall()]
+
+    # Only include brokers tracked in daily_cash_report when computing Combined Net Worth base capital
+    tracked_cash_brokers = {r['broker'].upper() for r in raw_cash_rows if r['broker'].upper() != 'CONSOLIDATED'}
+    excluded_cap_by_broker = defaultdict(float)
+    excluded_name_map = {}
+    for item in capital_entries:
+        br_raw = (item.get('broker') or '').strip()
+        br_upper = br_raw.upper()
+        if br_upper and br_upper not in tracked_cash_brokers:
+            excluded_cap_by_broker[br_upper] += item['amount']
+            excluded_name_map[br_upper] = br_raw
+    excluded_cash_brokers = [
+        {"broker": excluded_name_map[br], "base_capital": round(amt, 2)}
+        for br, amt in sorted(excluded_cap_by_broker.items())
+        if abs(amt) > 1e-6
+    ]
     
     def get_base_capital_for_date(date_str, broker=None):
         if broker:
             br_upper = broker.upper()
             return sum(item['amount'] for item in capital_entries if item['date'] <= date_str and (item['broker'] or '').upper() == br_upper)
         else:
-            return sum(item['amount'] for item in capital_entries if item['date'] <= date_str)
+            return sum(item['amount'] for item in capital_entries if item['date'] <= date_str and (item['broker'] or '').upper() in tracked_cash_brokers)
     
     # 2. Fetch portfolio records to map portfolio_id -> classification group AND portfolio name
     cursor.execute("SELECT id, name, classification, broker FROM portfolios")
@@ -571,6 +587,7 @@ def get_performance_report_data(db_path):
         "portfolio_ytd": dict(portfolio_ytd),
         "broker_cash_data": dict(broker_cash_summaries),
         "broker_cash_ytd": dict(broker_cash_ytd),
+        "excluded_cash_brokers": excluded_cash_brokers,
         "daily_cash_series": dict(daily_cash_series),
         "daily_broker_series": {br: dict(ydict) for br, ydict in daily_broker_series.items()}
     }

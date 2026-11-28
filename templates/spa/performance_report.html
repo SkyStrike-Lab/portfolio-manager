@@ -128,6 +128,14 @@
                         </div>
                     </div>
 
+                    <div v-if="perfActiveTab === 'cash' && perfData.excluded_cash_brokers && perfData.excluded_cash_brokers.length > 0" class="spa-perf-note">
+                        ℹ️ <strong>Note:</strong> Combined Net Worth excludes brokers without daily cash report tracking:
+                        <span v-for="(eb, idx) in perfData.excluded_cash_brokers" :key="eb.broker">
+                            <strong>{{ eb.broker }}</strong> ({{ formatCommas(eb.base_capital) }} SGD base capital)<span v-if="idx < perfData.excluded_cash_brokers.length - 1">, </span>
+                        </span>.
+                        Their holdings remain tracked under <strong>Classification Portfolios</strong>.
+                    </div>
+
                     <div v-if="perfActiveTab.startsWith('cash-')" class="spa-perf-note">
                         ℹ️ Per-broker cash tracking started on <strong>2026-06-29</strong>. Prior periods (2024 – 1H 2026) are tracked under <strong>Combined Net Worth</strong>.
                     </div>
